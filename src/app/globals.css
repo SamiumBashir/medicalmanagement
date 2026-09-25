@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=Gilda+Display&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 60 11% 96.5%;     /* #F7F7F3 Off White */
+    --foreground: 0 0% 9%;          /* #171717 Deep Charcoal */
+
+    --card: 0 0% 100%;              /* #FFFFFF Pure White */
+    --card-foreground: 0 0% 9%;     /* #171717 Deep Charcoal */
+
+    --popover: 0 0% 100%;           /* #FFFFFF Pure White */
+    --popover-foreground: 0 0% 9%;
+
+    --primary: 143 36% 75%;         /* #A8D5BA Primary Green */
+    --primary-foreground: 0 0% 9%;  /* #171717 Deep Charcoal */
+
+    --secondary: 142 35% 90%;       /* #DDEDE3 Soft Green */
+    --secondary-foreground: 157 30% 28%; /* #315C4A Dark Green */
+
+    --muted: 142 35% 90%;           /* #DDEDE3 Soft Green */
+    --muted-foreground: 60 2% 43%;  /* #70706B Text Gray */
+
+    --accent: 142 35% 90%;          /* #DDEDE3 Soft Green */
+    --accent-foreground: 157 30% 28%; /* #315C4A Dark Green */
+
+    --destructive: 0 72% 51%;        /* Alert Red */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 60 7% 90%;            /* #E8E8E3 Soft Gray */
+    --input: 60 7% 90%;             /* #E8E8E3 Soft Gray */
+    --ring: 157 30% 28%;            /* #315C4A Dark Green */
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 0 0% 9%;          /* #171717 Deep Charcoal */
+    --foreground: 60 11% 96.5%;     /* #F7F7F3 Off White */
+
+    --card: 0 0% 13%;
+    --card-foreground: 60 11% 96.5%;
+
+    --popover: 0 0% 13%;
+    --popover-foreground: 60 11% 96.5%;
+
+    --primary: 143 36% 75%;         /* #A8D5BA */
+    --primary-foreground: 0 0% 9%;
+
+    --secondary: 157 30% 28%;       /* #315C4A */
+    --secondary-foreground: 142 35% 90%;
+
+    --muted: 0 0% 18%;
+    --muted-foreground: 60 2% 65%;
+
+    --accent: 157 30% 28%;
+    --accent-foreground: 143 36% 75%;
+
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 22%;
+    --input: 0 0% 22%;
+    --ring: 143 36% 75%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Custom subtle scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
