@@ -21,7 +21,7 @@ export function signToken(payload: TokenPayload, expiresIn: string = "7d"): stri
 export function verifyToken(token: string): TokenPayload | null {
   try {
     return jwt.verify(token, AUTH_SECRET) as TokenPayload;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
