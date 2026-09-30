@@ -1,8 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { Metadata } from "next";
-import { dataStore } from "@/lib/services/dataStore";
-import { MOCK_REPORT_SAMPLE } from "@/lib/services/mockData";
+import { getReportById } from "@/lib/services/report.service";
 import { generateQrDataUrl } from "@/lib/qr";
 import { CheckCircle2, ShieldAlert, ShieldCheck, ChevronRight, FileCheck, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,25 +13,20 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { reportId } = await params;
   return {
-    title: `Report Verification: ${reportId} | Apex Diagnostics Anti-Counterfeit Portal`,
-    description: `Official cryptographic verification record for Diagnostic Report ID ${reportId}.`,
+    title: `Medical Report Verification | DiagnostiCare Anti-Counterfeit Portal`,
+    description: `Official cryptographic verification record for Diagnostic Report Reference ${reportId}.`,
   };
 }
 
 export default async function VerifyReportPage({ params }: PageProps) {
   const { reportId } = await params;
 
-  // Lookup in data store or fallback sample
-  const report =
-    dataStore.reports.find(
-      (r) => r.reportId.toLowerCase() === reportId.toLowerCase()
-    ) ||
-    (reportId.toLowerCase() === MOCK_REPORT_SAMPLE.reportId.toLowerCase()
-      ? MOCK_REPORT_SAMPLE
-      : null);
+  // Lookup via report service (supporting secure tokens or report ID)
+  const report = await getReportById(reportId);
+  const token = (report as any)?.verificationToken || reportId;
 
   const qrUrl = await generateQrDataUrl(
-    `https://apexdiagnostics.com.bd/verify/${reportId}`
+    `https://diagnosticare.org/verify/${token}`
   );
 
   return (
@@ -48,7 +42,7 @@ export default async function VerifyReportPage({ params }: PageProps) {
             Medical Report Authentication
           </h1>
           <p className="text-sm text-[#DDEDE3]/85">
-            Cryptographically validates original diagnostic reports issued by Apex Diagnostics.
+            Cryptographically validates original diagnostic reports issued by DiagnostiCare.
           </p>
         </div>
       </section>
@@ -106,68 +100,67 @@ export default async function VerifyReportPage({ params }: PageProps) {
               <div className="flex justify-between items-center py-2 border-b border-[#E8E8E3]">
                 <span className="text-[#70706B]">Date Issued</span>
                 <span className="font-mono text-[#171717]">
-                  {(report as any).issuedDate || "2026-09-29"}
+                  {report.issuedDate || "2026-09-29"}
                 </span>
               </div>
 
               <div className="flex justify-between items-center py-2 border-b border-[#E8E8E3]">
                 <span className="text-[#70706B]">Verifying Physician</span>
                 <span className="font-semibold text-[#171717] text-right">
-                  {report.verifiedBy || "Prof. Dr. Farhana Rahman (Pathologist)"}
+                  {report.verifiedBy || "Certified Consultant Pathologist"}
                 </span>
               </div>
 
               <div className="flex justify-between items-center py-2 border-b border-[#E8E8E3]">
-                <span className="text-[#70706B]">Issuing Branch</span>
-                <span className="text-[#171717] font-medium">{report.branchName}</span>
+                <span className="text-[#70706B]">Doctor Registration</span>
+                <span className="font-mono text-xs text-[#315C4A] bg-[#DDEDE3] px-2 py-0.5 rounded font-semibold">
+                  {report.doctorReg || "BMDC Verified"}
+                </span>
               </div>
 
               <div className="flex justify-between items-center py-2">
-                <span className="text-[#70706B]">Cryptographic Hash</span>
-                <span className="font-mono text-[11px] text-[#70706B] truncate max-w-[240px]">
-                  {report.authenticityHash}
-                </span>
+                <span className="text-[#70706B]">Issuing Facility</span>
+                <span className="font-medium text-[#171717] text-right">{report.branchName}</span>
               </div>
             </div>
 
-            {/* Privacy Notice: Soft Green #DDEDE3 */}
-            <div className="p-4 bg-[#DDEDE3]/50 rounded-2xl border border-[#A8D5BA]/40 text-xs text-[#70706B] leading-relaxed mb-6">
-              <strong className="text-[#171717]">Medical Data Privacy Notice:</strong> In strict compliance with patient confidentiality protocols, raw clinical parameter values and pathological figures are not exposed on this public verification seal. Full certified laboratory reports require authorized patient portal login.
+            {/* Authenticity Hash Fingerprint */}
+            <div className="p-4 bg-[#F7F7F3] rounded-2xl border border-[#E8E8E3] mb-6">
+              <span className="text-[11px] font-mono uppercase text-[#70706B] font-bold block mb-1">
+                Cryptographic Audit Digest (SHA-256)
+              </span>
+              <span className="font-mono text-xs text-[#171717] break-all select-all font-semibold">
+                {report.authenticityHash}
+              </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button asChild variant="medical" className="w-full">
-                <Link href="/patient/reports">Login to Access Full Medical Report</Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full border-[#E8E8E3] bg-[#FFFFFF] text-[#171717] hover:bg-[#DDEDE3]">
-                <Link href="/">Return to Home</Link>
+            <div className="text-center pt-2">
+              <Button asChild className="w-full bg-[#171717] hover:bg-[#262626] text-white">
+                <Link href="/">Return to DiagnostiCare Home</Link>
               </Button>
             </div>
           </div>
         ) : (
-          <div className="bg-[#FFFFFF] rounded-3xl border border-red-200 shadow-xl p-8 sm:p-10 text-center">
-            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="bg-[#FFFFFF] rounded-3xl border border-[#D97706] shadow-xl p-8 sm:p-10 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-amber-50 text-[#D97706] flex items-center justify-center mx-auto mb-4">
               <ShieldAlert className="w-8 h-8" />
             </div>
-
-            <span className="text-xs font-mono uppercase bg-red-50 text-red-700 px-3 py-1 rounded-full font-bold mb-2 inline-block">
-              Verification Notice
-            </span>
-
-            <h2 className="text-2xl font-bold text-[#171717] mb-2">
-              Report Not Located or Pending Doctor Review
+            <h2 className="text-xl font-bold text-[#171717] mb-2">
+              {report ? "Report Verification Pending" : "Record Not Located"}
             </h2>
             <p className="text-sm text-[#70706B] max-w-md mx-auto mb-6">
-              The requested identifier <code className="font-mono font-bold text-[#171717]">{reportId}</code> could not be authenticated as a finalized verified report. It may still be undergoing laboratory processing or doctor review.
+              {report
+                ? `Report ${reportId} is currently undergoing pathologist analysis and has not yet received final physician certification.`
+                : `We could not find an authentic medical record matching identifier "${reportId}" in our national laboratory registry.`}
             </p>
-
-            <div className="p-4 bg-[#F7F7F3] rounded-2xl border border-[#E8E8E3] text-xs text-[#70706B] mb-6 text-left">
-              If you hold a printed report with this identifier, please contact our quality verification desk at <strong>10678</strong> or visit our Dhanmondi Main Diagnostic Hub.
+            <div className="flex justify-center gap-3">
+              <Button asChild variant="outline" className="border-[#E8E8E3]">
+                <Link href="/contact">Contact Laboratory Helpdesk</Link>
+              </Button>
+              <Button asChild className="bg-[#315C4A] hover:bg-[#254638] text-white">
+                <Link href="/">Back to Home</Link>
+              </Button>
             </div>
-
-            <Button asChild variant="medical">
-              <Link href="/">Back to Homepage</Link>
-            </Button>
           </div>
         )}
       </div>

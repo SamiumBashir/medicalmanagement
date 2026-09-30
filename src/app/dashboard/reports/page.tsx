@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { dataStore, ReportRecord } from "@/lib/services/dataStore";
+import { verifyReportAction, requestReportCorrectionAction } from "@/app/actions/report.actions";
 import { generateQrDataUrl } from "@/lib/qr";
 import { ShieldCheck, CheckCircle2, RotateCcw, Eye, Printer, X, Search, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,43 +19,32 @@ export default function DoctorVerificationReportsPage() {
   const handleOpenReview = async (rpt: ReportRecord) => {
     setReviewReport(rpt);
     setDoctorComments(rpt.clinicalRemarks || "Clinical parameters verified against standard biological intervals.");
-    const url = await generateQrDataUrl(`https://diagnosticare.org/verify/${rpt.reportId}`);
+    const token = (rpt as any).verificationToken || rpt.reportId;
+    const url = await generateQrDataUrl(`https://diagnosticare.org/verify/${token}`);
     setQrUrl(url);
   };
 
-  const handleVerify = (rptId: string) => {
-    const found = dataStore.reports.find((r) => r.id === rptId);
-    if (found) {
-      found.status = "VERIFIED";
-      found.verifiedAt = new Date().toISOString();
-      found.verifiedBy = "Prof. Dr. Mizanur Rahman, FCPS, FRCPath";
-      found.doctorReg = "BMDC Reg: A-18492";
-      found.clinicalRemarks = doctorComments;
-
-      // Audit log
-      dataStore.auditLogs.unshift({
-        id: `aud-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        userName: "Prof. Dr. Mizanur Rahman",
-        userRole: "DOCTOR",
-        action: "REPORT_VERIFIED",
-        entity: "Report",
-        entityId: found.reportId,
-        details: `Doctor verified & digitally certified report for ${found.patientName}.`,
-      });
-
-      setReports([...dataStore.reports]);
-      setReviewReport(null);
+  const handleVerify = async (rptId: string) => {
+    try {
+      const res = await verifyReportAction(rptId, doctorComments);
+      if (res.success && res.report) {
+        setReports(reports.map((r) => (r.reportId === res.report.reportId ? res.report : r)));
+        setReviewReport(null);
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to verify report");
     }
   };
 
-  const handleRequestCorrection = (rptId: string) => {
-    const found = dataStore.reports.find((r) => r.id === rptId);
-    if (found) {
-      found.status = "CORRECTION_REQUESTED";
-      found.clinicalRemarks = `Correction requested by Pathologist: ${doctorComments}`;
-      setReports([...dataStore.reports]);
-      setReviewReport(null);
+  const handleRequestCorrection = async (rptId: string) => {
+    try {
+      const res = await requestReportCorrectionAction(rptId, doctorComments);
+      if (res.success && res.report) {
+        setReports(reports.map((r) => (r.reportId === res.report.reportId ? res.report : r)));
+        setReviewReport(null);
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to request correction");
     }
   };
 
