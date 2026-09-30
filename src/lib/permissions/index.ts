@@ -264,9 +264,12 @@ export function isRouteAllowed(role: UserRole, pathname: string): boolean {
   const allowedRoutes = ROLE_ALLOWED_ROUTES[role] || [];
   if (allowedRoutes.includes("*")) return true;
 
-  return allowedRoutes.some(
-    (allowed) => pathname === allowed || pathname.startsWith(`${allowed}/`)
-  );
+  return allowedRoutes.some((allowed) => {
+    if (allowed === "/dashboard") {
+      return pathname === "/dashboard";
+    }
+    return pathname === allowed || pathname.startsWith(`${allowed}/`);
+  });
 }
 
 export function getRoleDefaultRoute(role: UserRole): string {

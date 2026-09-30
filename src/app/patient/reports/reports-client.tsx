@@ -13,7 +13,8 @@ export function PatientReportsClient({ reports }: { reports: ReportRecord[] }) {
 
   const handleOpenReport = async (rpt: ReportRecord) => {
     setActiveReport(rpt);
-    const url = await generateQrDataUrl(`https://diagnosticare.org/verify/${rpt.reportId}`);
+    const token = (rpt as any).verificationToken || rpt.reportId;
+    const url = await generateQrDataUrl(`https://diagnosticare.org/verify/${token}`);
     setQrUrl(url);
   };
 

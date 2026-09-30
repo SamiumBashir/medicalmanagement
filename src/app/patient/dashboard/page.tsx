@@ -1,6 +1,8 @@
 import * as React from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { dataStore } from "@/lib/services/dataStore";
+import { getServerSession } from "@/lib/auth/session";
 import {
   Calendar,
   FileText,
@@ -13,11 +15,18 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function PatientDashboardPage() {
-  const patientId = "PAT-2026-000001";
+export default async function PatientDashboardPage() {
+  const session = await getServerSession();
+  if (!session) {
+    redirect("/login?from=/patient/dashboard");
+  }
+
+  // Derive patient identity securely from authenticated server session
+  const patientId = session.patientId || "PAT-2026-000001";
+  const patientName = session.name || "Patient";
 
   const appointments = dataStore.appointments.filter(
-    (a) => a.patientPhone.includes("1711") || a.patientName.includes("Tanvir")
+    (a) => a.patientName.toLowerCase() === patientName.toLowerCase() || (session.patientId && a.patientPhone === (session as any).phone)
   );
   const orders = dataStore.orders.filter((o) => o.patientId === patientId);
   const reports = dataStore.reports.filter((r) => r.patientId === patientId);
@@ -31,10 +40,10 @@ export default function PatientDashboardPage() {
       <div className="bg-gradient-to-r from-teal-900 to-slate-900 text-white rounded-3xl p-8 sm:p-10 shadow-lg relative overflow-hidden">
         <div className="relative z-10 max-w-2xl">
           <span className="text-xs font-mono uppercase tracking-widest text-teal-300 font-bold block mb-2">
-            Patient Health Dashboard
+            Patient Health Dashboard • {patientId}
           </span>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
-            Welcome back, Tanvir Ahmed
+            Welcome back, {patientName}
           </h1>
           <p className="text-slate-300 text-sm leading-relaxed mb-6 font-light">
             You have <strong className="text-white font-semibold">{reports.length} verified diagnostic report(s)</strong> available for digital download. All laboratory results are secured with cryptographic QR certification.
@@ -110,7 +119,14 @@ export default function PatientDashboardPage() {
           </div>
 
           {appointments.length === 0 ? (
-            <p className="text-sm text-slate-500 py-6 text-center">No upcoming appointments booked.</p>
+            <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+              <Calendar className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-slate-700">No scheduled consultations</p>
+              <p className="text-xs text-slate-400 mb-4">Book an appointment with a specialist physician</p>
+              <Button asChild size="sm" className="bg-teal-700 text-white">
+                <Link href="/book-appointment">Book Consultation</Link>
+              </Button>
+            </div>
           ) : (
             <div className="space-y-4">
               {appointments.map((apt) => (
@@ -149,32 +165,43 @@ export default function PatientDashboardPage() {
             </Link>
           </div>
 
-          <div className="space-y-4">
-            {reports.map((rpt) => (
-              <div key={rpt.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-mono font-bold text-teal-800">{rpt.reportId}</span>
-                    <span
-                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
-                        rpt.status === "VERIFIED"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {rpt.status}
-                    </span>
+          {reports.length === 0 ? (
+            <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+              <FileCheck2 className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-slate-700">No laboratory reports found</p>
+              <p className="text-xs text-slate-400 mb-4">Diagnostic reports will appear here once verified by a pathologist</p>
+              <Button asChild size="sm" variant="outline" className="border-slate-300">
+                <Link href="/book-test">Schedule Lab Test</Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {reports.map((rpt) => (
+                <div key={rpt.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-mono font-bold text-teal-800">{rpt.reportId}</span>
+                      <span
+                        className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                          rpt.status === "VERIFIED"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-amber-100 text-amber-800"
+                        }`}
+                      >
+                        {rpt.status}
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-slate-900 text-sm">{rpt.testName}</h4>
+                    <p className="text-xs text-slate-500 font-mono">Issued: {rpt.issuedDate}</p>
                   </div>
-                  <h4 className="font-bold text-slate-900 text-sm">{rpt.testName}</h4>
-                  <p className="text-xs text-slate-500 font-mono">Issued: {rpt.issuedDate}</p>
-                </div>
 
-                <Button asChild size="sm" variant="outline" className="border-slate-300">
-                  <Link href={`/verify/${rpt.reportId}`}>Verify Seal</Link>
-                </Button>
-              </div>
-            ))}
-          </div>
+                  <Button asChild size="sm" variant="outline" className="border-slate-300">
+                    <Link href={`/verify/${(rpt as any).verificationToken || rpt.reportId}`}>Verify Seal</Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

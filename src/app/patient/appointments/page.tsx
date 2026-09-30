@@ -1,12 +1,23 @@
 import * as React from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { dataStore } from "@/lib/services/dataStore";
-import { Calendar, Plus, MapPin, Clock, User, Phone } from "lucide-react";
+import { getServerSession } from "@/lib/auth/session";
+import { Calendar, Plus, MapPin, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function PatientAppointmentsPage() {
+export default async function PatientAppointmentsPage() {
+  const session = await getServerSession();
+  if (!session) {
+    redirect("/login?from=/patient/appointments");
+  }
+
+  const patientName = session.name || "Patient";
+
   const appointments = dataStore.appointments.filter(
-    (a) => a.patientPhone.includes("1711") || a.patientName.includes("Tanvir")
+    (a) =>
+      a.patientName.toLowerCase() === patientName.toLowerCase() ||
+      (session.patientId && a.patientPhone === (session as any).phone)
   );
 
   return (
@@ -30,7 +41,12 @@ export default function PatientAppointmentsPage() {
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         {appointments.length === 0 ? (
           <div className="p-12 text-center text-slate-500 text-sm">
-            No consultations currently scheduled.
+            <Calendar className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+            <p className="font-semibold text-slate-700">No consultations currently scheduled.</p>
+            <p className="text-xs text-slate-400 mt-1 mb-4">You have not booked any physician appointments yet.</p>
+            <Button asChild size="sm" className="bg-teal-700 text-white">
+              <Link href="/book-appointment">Book an Appointment</Link>
+            </Button>
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
