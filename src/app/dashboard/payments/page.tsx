@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { dataStore, PaymentRecord } from "@/lib/services/dataStore";
+import { recordPaymentAction, processRefundAction } from "@/app/actions/payment.actions";
 import { CreditCard, Plus, Search, RotateCcw, CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,73 +21,36 @@ export default function DashboardPaymentsPage() {
     notes: "bKash TrxID: 8KL92A",
   });
 
-  const handleRecordPayment = (e: React.FormEvent) => {
+  const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    const count = dataStore.payments.length + 1;
-    const transactionId = `TXN-2026-${String(count).padStart(6, "0")}`;
-
-    const record: PaymentRecord = {
-      id: `pay-${Date.now()}`,
-      transactionId,
-      invoiceId: newPay.invoiceId,
-      orderId: newPay.orderId,
-      patientName: newPay.patientName,
-      amount: Number(newPay.amount) || 0,
-      method: newPay.method,
-      receivedBy: "Cashier Shahriar",
-      date: new Date().toISOString(),
-      notes: newPay.notes,
-    };
-
-    dataStore.payments.unshift(record);
-
-    // Audit log
-    dataStore.auditLogs.unshift({
-      id: `aud-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      userName: "Cashier Shahriar",
-      userRole: "ACCOUNTANT",
-      action: "PAYMENT_RECORDED",
-      entity: "Payment",
-      entityId: transactionId,
-      details: `Received ৳${record.amount} via ${record.method} for ${record.invoiceId}`,
-    });
-
-    setPayments([...dataStore.payments]);
-    setShowPayModal(false);
-  };
-
-  const handleRefund = (txId: string) => {
-    const original = dataStore.payments.find((p) => p.id === txId);
-    if (original) {
-      const count = dataStore.payments.length + 1;
-      const refundRecord: PaymentRecord = {
-        id: `pay-${Date.now()}`,
-        transactionId: `TXN-REF-${String(count).padStart(5, "0")}`,
-        invoiceId: original.invoiceId,
-        orderId: original.orderId,
-        patientName: original.patientName,
-        amount: -original.amount,
-        method: original.method,
-        receivedBy: "Cashier Shahriar",
-        date: new Date().toISOString(),
-        notes: `Refund issued for TXN ${original.transactionId}`,
-      };
-
-      dataStore.payments.unshift(refundRecord);
-
-      dataStore.auditLogs.unshift({
-        id: `aud-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        userName: "Cashier Shahriar",
-        userRole: "ACCOUNTANT",
-        action: "PAYMENT_REFUNDED",
-        entity: "Payment",
-        entityId: refundRecord.transactionId,
-        details: `Issued refund ৳${original.amount} against original TXN ${original.transactionId}`,
+    try {
+      const res = await recordPaymentAction({
+        invoiceId: newPay.invoiceId,
+        orderId: newPay.orderId,
+        patientName: newPay.patientName,
+        amount: Number(newPay.amount) || 0,
+        method: newPay.method,
+        notes: newPay.notes,
       });
 
-      setPayments([...dataStore.payments]);
+      if (res.success && res.payment) {
+        setPayments([res.payment, ...payments]);
+        setShowPayModal(false);
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to record payment");
+    }
+  };
+
+  const handleRefund = async (txId: string) => {
+    try {
+      const reason = prompt("Please provide a reason for processing this refund:") || "Patient Requested Adjustment";
+      const res = await processRefundAction(txId, reason);
+      if (res.success && res.refund) {
+        setPayments([res.refund, ...payments]);
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to process refund");
     }
   };
 

@@ -1,126 +1,77 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dataStore } from "@/lib/services/dataStore";
-import { MOCK_TESTS, MOCK_BRANCHES } from "@/lib/services/mockData";
+import { z } from "zod";
+import { createOrderTransaction, getOrders } from "@/lib/services/order.service";
+import { getServerSession } from "@/lib/auth/session";
+import { formatErrorResponse, formatSuccessResponse } from "@/lib/services/dbHelper";
 
-export async function GET() {
-  return NextResponse.json({ orders: dataStore.orders });
+const createOrderSchema = z.object({
+  patientName: z.string().min(2, "Patient name is required"),
+  patientPhone: z.string().min(6, "Valid contact number is required"),
+  patientEmail: z.string().email().optional().or(z.literal("")),
+  branchId: z.string().min(1, "Branch selection is required"),
+  testIds: z.array(z.string()).min(1, "At least one diagnostic investigation must be selected"),
+  preferredDate: z.string().optional(),
+  patientAge: z.coerce.number().optional().default(35),
+  patientGender: z.enum(["MALE", "FEMALE", "OTHER"]).default("MALE"),
+});
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const patientId = searchParams.get("patientId") || undefined;
+    const branchId = searchParams.get("branchId") || undefined;
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
+
+    const result = await getOrders({ patientId, branchId, page, limit });
+    return NextResponse.json({ success: true, ...result });
+  } catch (error: any) {
+    console.error("Fetch orders error:", error);
+    return formatErrorResponse("FETCH_FAILED", "Failed to retrieve orders", 500);
+  }
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { patientName, patientPhone, patientEmail, branchId, testIds, preferredDate } = body;
+    const parsed = createOrderSchema.safeParse(body);
 
-    if (!patientName || !patientPhone || !branchId || !testIds || !testIds.length) {
-      return NextResponse.json(
-        { error: "Patient name, phone, branch, and at least one test are required." },
-        { status: 400 }
+    if (!parsed.success) {
+      return formatErrorResponse(
+        "VALIDATION_ERROR",
+        parsed.error.issues.map((i) => i.message).join(", "),
+        400
       );
     }
 
-    const selectedTests = MOCK_TESTS.filter((t) => testIds.includes(t.id));
-    if (!selectedTests.length) {
-      return NextResponse.json({ error: "No valid diagnostic tests selected." }, { status: 400 });
-    }
+    const session = await getServerSession();
+    const actor = session
+      ? { name: session.name, role: session.role }
+      : { name: parsed.data.patientName, role: "PATIENT" };
 
-    const branch = MOCK_BRANCHES.find((b) => b.id === branchId) || MOCK_BRANCHES[0];
-
-    const subtotal = selectedTests.reduce((acc, t) => acc + t.price, 0);
-    // 10% promotional online discount
-    const discount = Math.round(subtotal * 0.1);
-    const total = subtotal - discount;
-
-    const orderNum = dataStore.orders.length + 1;
-    const orderId = `ORD-2026-${String(orderNum).padStart(6, "0")}`;
-
-    const patient = dataStore.patients.find((p) => p.phone === patientPhone);
-    const patientId = patient ? patient.patientId : `PAT-2026-${String(dataStore.patients.length + 1).padStart(6, "0")}`;
-
-    if (!patient) {
-      dataStore.patients.unshift({
-        id: `pat-${Date.now()}`,
-        patientId,
-        name: patientName,
-        phone: patientPhone,
-        email: patientEmail,
-        age: 35,
-        gender: "MALE",
-        registeredAt: new Date().toISOString(),
-      });
-    }
-
-    dataStore.currentTokenIndex += 1;
-    const tokenNumber = `TKN-${String(dataStore.currentTokenIndex).padStart(3, "0")}`;
-
-    const newOrder = {
-      id: `ord-${Date.now()}`,
-      orderId,
-      patientId,
-      patientName,
-      patientPhone,
-      branchId: branch.id,
-      branchName: branch.name,
-      tests: selectedTests.map((t) => ({
-        testId: t.id,
-        testCode: t.code,
-        testName: t.name,
-        price: t.price,
-      })),
-      subtotal,
-      discount,
-      total,
-      paidAmount: total, // Mark paid for demo or online booking
-      dueAmount: 0,
-      paymentStatus: "PAID" as const,
-      tokenNumber,
-      tokenStatus: "WAITING" as const,
-      orderDate: preferredDate || new Date().toISOString(),
-    };
-
-    dataStore.orders.unshift(newOrder);
-
-    // Create Invoice
-    const invoiceId = `INV-2026-${String(dataStore.invoices.length + 1).padStart(6, "0")}`;
-    dataStore.invoices.unshift({
-      id: `inv-${Date.now()}`,
-      invoiceId,
-      orderId,
-      patientId,
-      patientName,
-      items: selectedTests.map((t) => ({ description: t.name, amount: t.price })),
-      subtotal,
-      discount,
-      total,
-      paid: total,
-      due: 0,
-      status: "PAID",
-      date: new Date().toISOString(),
-    });
-
-    // Create Samples for phlebotomy tracking
-    selectedTests.forEach((t, i) => {
-      const sampleNum = dataStore.samples.length + 1 + i;
-      dataStore.samples.unshift({
-        id: `smp-${Date.now()}-${i}`,
-        sampleId: `SMP-2026-${String(sampleNum).padStart(6, "0")}`,
-        orderId,
-        patientId,
-        patientName,
-        testName: t.name,
-        sampleType: t.sampleType,
-        status: "PENDING",
-      });
-    });
+    const result = await createOrderTransaction(
+      {
+        patientName: parsed.data.patientName,
+        patientPhone: parsed.data.patientPhone,
+        patientEmail: parsed.data.patientEmail || undefined,
+        branchId: parsed.data.branchId,
+        testIds: parsed.data.testIds,
+        preferredDate: parsed.data.preferredDate,
+        patientAge: parsed.data.patientAge,
+        patientGender: parsed.data.patientGender,
+      },
+      actor
+    );
 
     return NextResponse.json({
       success: true,
-      order: newOrder,
-      invoiceId,
-      tokenNumber,
-      message: "Diagnostic test booking confirmed successfully!",
+      order: result.order,
+      invoice: result.invoice,
+      tokenNumber: result.tokenNumber,
+      message: `Diagnostic requisition ${result.order.orderId} registered successfully. Queue token ${result.tokenNumber} issued.`,
     });
   } catch (error: any) {
     console.error("Order creation error:", error);
-    return NextResponse.json({ error: "Failed to create test order" }, { status: 500 });
+    return formatErrorResponse("ORDER_FAILED", error.message || "Failed to process diagnostic order", 500);
   }
 }
