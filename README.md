@@ -11,21 +11,6 @@ Inspired by the clean, minimalist aesthetic of the **Klaas Medical Template**, t
 
 ---
 
-## 🎨 Curated Design Palette
-
-| Color | HEX | Usage |
-| :--- | :--- | :--- |
-| 🟢 **Primary Green** | `#A8D5BA` | Main Accent / Primary Action CTAs |
-| 🟢 **Soft Green** | `#DDEDE3` | Subtle Badges, Active States & Card Highlights |
-| ⚫ **Deep Charcoal** | `#171717` | Premium Headings, Dark Sections & Sidebar |
-| ⚪ **Off White** | `#F7F7F3` | Global Canvas Background |
-| ⚪ **Pure White** | `#FFFFFF` | Card Surfaces & Main Navigation |
-| 🩶 **Soft Gray** | `#E8E8E3` | Dividers & Elegant Borders |
-| 🩶 **Text Gray** | `#70706B` | Secondary Text & Micro-copy |
-| 🟢 **Dark Green** | `#315C4A` | Interactive Hover States & Dark Accent |
-
----
-
 ## 🌟 Key Features
 
 ### 1. 🏥 Multi-Page Public Healthcare Portal
@@ -163,6 +148,9 @@ docker-compose logs -f
 
 ---
 
-## 📜 License
+## 📜 License & Copyright
+
+Copyright © 2026 **Samium** ([@SamiumBashir](https://github.com/SamiumBashir)). All rights reserved.
 
 This project is licensed under the [MIT License](LICENSE).
+
