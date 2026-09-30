@@ -19,7 +19,7 @@ if (!cached) {
  * Connects to MongoDB with connection pooling and caching across Next.js hot-reloads
  */
 export async function connectToDatabase(): Promise<typeof mongoose> {
-  if (cached!.conn) {
+  if (cached!.conn && mongoose.connection.readyState === 1) {
     return cached!.conn;
   }
 
@@ -27,7 +27,7 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
     const opts: mongoose.ConnectOptions = {
       bufferCommands: false,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 2000,
       socketTimeoutMS: 45000,
     };
 
@@ -41,7 +41,7 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
     cached!.conn = await cached!.promise;
   } catch (error) {
     cached!.promise = null;
-    console.error(" [MongoDB] Connection error:", error);
+    cached!.conn = null;
     throw error;
   }
 

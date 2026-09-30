@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { dataStore, PatientRecord } from "@/lib/services/dataStore";
+import { PatientRecord } from "@/lib/services/dataStore";
+import { createPatientAction } from "@/app/actions/patient.actions";
 import { Search, Plus, User, Phone, Mail, Calendar, Eye, X, CheckCircle2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,28 +32,27 @@ export function PatientsManagementClient({ initialPatients }: { initialPatients:
     );
   }, [patients, searchQuery]);
 
-  const handleCreatePatient = (e: React.FormEvent) => {
+  const handleCreatePatient = async (e: React.FormEvent) => {
     e.preventDefault();
-    const count = dataStore.patients.length + 1;
-    const patientId = `PAT-2026-${String(count).padStart(6, "0")}`;
+    try {
+      const res = await createPatientAction({
+        name: newPatient.name,
+        phone: newPatient.phone,
+        email: newPatient.email || undefined,
+        age: Number(newPatient.age) || 30,
+        gender: newPatient.gender,
+        bloodGroup: newPatient.bloodGroup,
+        address: newPatient.address,
+      });
 
-    const created: PatientRecord = {
-      id: `pat-${Date.now()}`,
-      patientId,
-      name: newPatient.name,
-      phone: newPatient.phone,
-      email: newPatient.email,
-      age: Number(newPatient.age) || 30,
-      gender: newPatient.gender,
-      bloodGroup: newPatient.bloodGroup,
-      address: newPatient.address,
-      registeredAt: new Date().toISOString(),
-    };
-
-    dataStore.patients.unshift(created);
-    setPatients([...dataStore.patients]);
-    setShowAddModal(false);
-    setNewPatient({ name: "", phone: "", email: "", age: "35", gender: "MALE", bloodGroup: "B+", address: "" });
+      if (res.success && res.patient) {
+        setPatients([res.patient, ...patients]);
+        setShowAddModal(false);
+        setNewPatient({ name: "", phone: "", email: "", age: "35", gender: "MALE", bloodGroup: "B+", address: "" });
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to register patient");
+    }
   };
 
   return (

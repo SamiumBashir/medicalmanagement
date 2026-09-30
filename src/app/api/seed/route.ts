@@ -1,12 +1,22 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { dataStore } from "@/lib/services/dataStore";
 import { connectToDatabase, getDbConnectionStatus } from "@/lib/db/connection";
-import { Branch, Doctor, TestCategory, Test, Patient, User } from "@/models";
-import { MOCK_BRANCHES, MOCK_DOCTORS, MOCK_CATEGORIES, MOCK_TESTS } from "@/lib/services/mockData";
+import { Branch, TestCategory, User } from "@/models";
+import { MOCK_BRANCHES, MOCK_CATEGORIES } from "@/lib/services/mockData";
 import { hashPassword } from "@/lib/auth/jwt";
+import { getServerSession } from "@/lib/auth/session";
+import { formatErrorResponse } from "@/lib/services/dbHelper";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
+    // In production, strictly require SUPER_ADMIN authentication
+    if (process.env.NODE_ENV === "production") {
+      const session = await getServerSession();
+      if (!session || session.role !== "SUPER_ADMIN") {
+        return formatErrorResponse("FORBIDDEN", "Database seeding is restricted to Super Administrators.", 403);
+      }
+    }
+
     let mongoConnected = false;
     try {
       await connectToDatabase();
@@ -87,11 +97,11 @@ export async function POST() {
       success: true,
       mongoConnected,
       message: mongoConnected
-        ? "MongoDB collections seeded with diagnostic categories, tests, branches, and test accounts."
+        ? "MongoDB collections seeded with diagnostic categories, branches, and verified test accounts."
         : "Data store refreshed with complete clinical diagnostic catalog and demo records.",
     });
   } catch (error: any) {
-    console.error("Seed error:", error);
-    return NextResponse.json({ error: error.message || "Seeding failed" }, { status: 500 });
+    console.error("Seed route execution error:", error);
+    return formatErrorResponse("SEED_ERROR", "Database seeding routine encountered an error.", 500);
   }
 }
