@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { dataStore, SampleRecord, ReportRecord } from "@/lib/services/dataStore";
+import { submitLabResultsAction } from "@/app/actions/lab.actions";
 import { MOCK_TESTS, MockTest } from "@/lib/services/mockData";
 import { LabResultFlag } from "@/types";
 import { Microscope, AlertTriangle, CheckCircle2, Save, Send, ShieldAlert, ArrowRight } from "lucide-react";
@@ -79,58 +80,30 @@ export default function LaboratoryWorkbenchPage() {
     setParametersData(updated);
   };
 
-  const handleSubmitForVerification = () => {
+  const handleSubmitForVerification = async () => {
     if (!selectedSample) return;
 
-    // Create Report awaiting Doctor verification
-    const reportNum = dataStore.reports.length + 1;
-    const reportId = `RPT-2026-${String(reportNum).padStart(6, "0")}`;
+    try {
+      const res = await submitLabResultsAction(
+        selectedSample.sampleId,
+        parametersData.map((p) => ({
+          name: p.name,
+          value: p.value,
+          unit: p.unit,
+          refRange: p.refRange,
+          flag: p.flag,
+        })),
+        clinicalRemarks
+      );
 
-    const newReport: ReportRecord = {
-      id: `rpt-${Date.now()}`,
-      reportId,
-      orderId: selectedSample.orderId,
-      patientId: selectedSample.patientId,
-      patientName: selectedSample.patientName,
-      patientAge: 42,
-      patientGender: "MALE",
-      testName: selectedSample.testName,
-      category: matchedTest.category,
-      sampleType: selectedSample.sampleType,
-      status: "PENDING_VERIFICATION",
-      branchName: "Dhanmondi Main Diagnostic Hub",
-      authenticityHash: `SHA256-${Math.random().toString(36).substring(2, 12)}`,
-      results: parametersData.map((p) => ({
-        parameter: p.name,
-        value: p.value,
-        unit: p.unit,
-        refRange: p.refRange,
-        flag: p.flag,
-      })),
-      clinicalRemarks,
-      issuedDate: new Date().toISOString().split("T")[0],
-    };
-
-    dataStore.reports.unshift(newReport);
-    selectedSample.status = "COMPLETED";
-
-    // Also trigger critical notification if any flag is CRITICAL
-    const hasCritical = parametersData.some((p) => p.flag === "CRITICAL");
-    if (hasCritical) {
-      dataStore.auditLogs.unshift({
-        id: `aud-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        userName: "Tech. Rafiqul Islam",
-        userRole: "TECHNICIAN",
-        action: "CRITICAL_VALUE_FLAGGED",
-        entity: "Report",
-        entityId: reportId,
-        details: `Critical panic alert flagged on ${selectedSample.testName} for ${selectedSample.patientName}`,
-      });
+      if (res.success) {
+        selectedSample.status = "COMPLETED";
+        setSubmissionSuccess(true);
+        setTimeout(() => setSubmissionSuccess(false), 4000);
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to submit laboratory results");
     }
-
-    setSubmissionSuccess(true);
-    setTimeout(() => setSubmissionSuccess(false), 4000);
   };
 
   return (
