@@ -47,6 +47,16 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Do not render public Navbar on internal app, portal, or auth pages
+  const isExcluded =
+    pathname?.startsWith("/dashboard") ||
+    pathname?.startsWith("/patient") ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/forgot-password";
+
+  if (isExcluded) return null;
+
   return (
     <header className="sticky top-0 z-50 w-full transition-all duration-300">
       {/* Top Notification / Emergency Bar: Deep Charcoal #171717 */}
