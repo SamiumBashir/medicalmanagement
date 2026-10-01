@@ -13,10 +13,36 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { motion } from "motion/react";
+import { gsap } from "gsap";
 
 export function ReportVerificationPreview() {
   const router = useRouter();
   const [reportId, setReportId] = React.useState("");
+  const laserRef = React.useRef<HTMLDivElement>(null);
+  const qrContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // GSAP Laser Scan Sweep Animation
+  React.useEffect(() => {
+    const ctx = gsap.context(() => {
+      if (laserRef.current) {
+        gsap.fromTo(
+          laserRef.current,
+          { y: 0, opacity: 0.3 },
+          {
+            y: 58,
+            opacity: 1,
+            duration: 1.8,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+          }
+        );
+      }
+    });
+
+    return () => ctx.revert();
+  }, []);
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,9 +51,15 @@ export function ReportVerificationPreview() {
   };
 
   return (
-    <section className="py-20 lg:py-24 bg-[#FFFFFF] border-b border-[#E8E8E3]">
+    <section className="py-20 lg:py-24 bg-[#FFFFFF] border-b border-[#E8E8E3] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-[#171717] rounded-[36px] lg:rounded-[48px] p-8 sm:p-12 lg:p-16 text-white shadow-xl relative overflow-hidden border border-[#262626]">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="bg-[#171717] rounded-[36px] lg:rounded-[48px] p-8 sm:p-12 lg:p-16 text-white shadow-xl relative overflow-hidden border border-[#262626]"
+        >
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
             {/* Left Content (7 Cols) */}
             <div className="lg:col-span-7 space-y-5">
@@ -60,20 +92,22 @@ export function ReportVerificationPreview() {
                     placeholder="Report ID (e.g. REP-2026-001)"
                     value={reportId}
                     onChange={(e) => setReportId(e.target.value)}
-                    className="bg-[#222222] border-[#315C4A]/60 text-white placeholder:text-[#70706B] h-12 pl-10 pr-4 rounded-full focus:border-[#A8D5BA]"
+                    className="bg-[#222222] border-[#315C4A]/50 text-white placeholder:text-[#70706B] h-12 rounded-xl text-sm focus:border-[#A8D5BA] pl-10"
                   />
-                  <Search className="w-4 h-4 text-[#A8D5BA] absolute left-3.5 top-4" />
+                  <Search className="w-4 h-4 text-[#70706B] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 </div>
 
-                <Button
-                  type="submit"
-                  variant="medical"
-                  size="lg"
-                  className="h-12 px-7 rounded-full text-xs font-semibold shrink-0"
-                >
-                  <span>Verify report</span>
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    type="submit"
+                    variant="medical"
+                    size="lg"
+                    className="h-12 px-6 rounded-xl text-sm font-semibold tracking-wide whitespace-nowrap w-full sm:w-auto"
+                  >
+                    <span>Verify now</span>
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </motion.div>
               </form>
 
               {/* Sample Quick Links */}
@@ -95,26 +129,47 @@ export function ReportVerificationPreview() {
               </div>
             </div>
 
-            {/* Right Card: Security Credentials Preview (5 Cols) */}
-            <div className="lg:col-span-5 bg-[#222222] border border-[#315C4A]/40 rounded-3xl p-6 sm:p-8 space-y-4">
+            {/* Right Card: Security Credentials Preview (5 Cols) with Laser Sweep */}
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              className="lg:col-span-5 bg-[#222222] border border-[#315C4A]/40 rounded-3xl p-6 sm:p-8 space-y-4 shadow-lg"
+            >
               <div className="flex items-center justify-between pb-3 border-b border-[#315C4A]/30">
-                <span className="text-[11px] font-mono text-[#A8D5BA] uppercase">Digital Cryptographic Stamp</span>
-                <span className="text-[10px] font-mono text-[#DDEDE3]/60">SHA-256</span>
+                <span className="text-[11px] font-mono text-[#A8D5BA] uppercase tracking-wider">
+                  Digital Cryptographic Stamp
+                </span>
+                <span className="text-[10px] font-mono text-[#DDEDE3]/60 bg-[#171717] px-2 py-0.5 rounded border border-[#315C4A]/30">
+                  SHA-256
+                </span>
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-[#171717] border border-[#315C4A]/60 flex items-center justify-center text-[#A8D5BA] shrink-0">
+                {/* QR Code Container with GSAP Animated Laser Scanner */}
+                <div
+                  ref={qrContainerRef}
+                  className="relative w-16 h-16 rounded-2xl bg-[#171717] border border-[#315C4A]/60 flex items-center justify-center text-[#A8D5BA] shrink-0 overflow-hidden shadow-inner"
+                >
                   <QrCode className="w-10 h-10" />
+                  {/* GSAP Green Laser Line Sweep */}
+                  <div
+                    ref={laserRef}
+                    className="absolute top-0 left-0 right-0 h-[2px] bg-[#A8D5BA] shadow-[0_0_8px_#A8D5BA] pointer-events-none"
+                  />
                 </div>
                 <div className="space-y-1 text-xs">
                   <p className="font-semibold text-white">Dual Doctor Sign-Off</p>
-                  <p className="text-[11px] text-[#70706B] font-mono">BMDC Reg. Certified Consultants</p>
-                  <p className="text-[11px] text-[#A8D5BA] font-mono">Tamper-Evident Cloud Storage</p>
+                  <p className="text-[11px] text-[#70706B] font-mono">
+                    BMDC Reg. Certified Consultants
+                  </p>
+                  <p className="text-[11px] text-[#A8D5BA] font-mono flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3" />
+                    Tamper-Evident Cloud Storage
+                  </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

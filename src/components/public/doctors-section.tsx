@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -5,9 +7,9 @@ import {
   Calendar,
   Clock,
   ArrowRight,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion } from "motion/react";
 
 export interface DoctorProfile {
   id: string;
@@ -59,12 +61,18 @@ const CONSULTANT_DOCTORS: DoctorProfile[] = [
 
 export function DoctorsSection() {
   return (
-    <section id="the-team" className="py-20 lg:py-28 bg-[#FFFFFF] border-b border-[#E8E8E3]">
+    <section id="the-team" className="py-20 lg:py-28 bg-[#FFFFFF] border-b border-[#E8E8E3] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Klaas The-Team-2 Split Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           {/* Left Column: The-Team-2-About (4 Cols) */}
-          <div className="lg:col-span-4 space-y-6 sticky top-28">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="lg:col-span-4 space-y-6 sticky top-28"
+          >
             <div className="flex items-center gap-3">
               <span className="text-xs font-serif font-bold text-[#171717] w-6 h-6 rounded-full border border-[#171717]/40 flex items-center justify-center">
                 3
@@ -84,25 +92,32 @@ export function DoctorsSection() {
             </p>
 
             <div className="pt-2">
-              <Button
-                variant="medical"
-                size="lg"
-                asChild
-                className="rounded-full px-7 text-xs sm:text-sm font-semibold shadow-sm"
-              >
-                <Link href="/doctors" className="flex items-center gap-2">
-                  <span>The team</span>
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </Link>
-              </Button>
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="inline-block">
+                <Button
+                  variant="medical"
+                  size="lg"
+                  asChild
+                  className="rounded-full px-7 text-xs sm:text-sm font-semibold shadow-sm"
+                >
+                  <Link href="/doctors" className="flex items-center gap-2">
+                    <span>The team</span>
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </Button>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Right Column: Team Cards (8 Cols) */}
+          {/* Right Column: Team Cards (8 Cols) with Stagger */}
           <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {CONSULTANT_DOCTORS.map((doctor) => (
-              <div
+            {CONSULTANT_DOCTORS.map((doctor, idx) => (
+              <motion.div
                 key={doctor.id}
+                initial={{ opacity: 0, y: 35 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.55, delay: idx * 0.12, ease: "easeOut" }}
+                whileHover={{ y: -6, transition: { duration: 0.25 } }}
                 className="bg-[#F7F7F3] border border-[#E8E8E3] rounded-[28px] overflow-hidden flex flex-col justify-between group hover:border-[#A8D5BA] transition-all duration-300 shadow-sm"
               >
                 {/* Doctor Portrait */}
@@ -142,7 +157,7 @@ export function DoctorsSection() {
                       variant="outline"
                       size="sm"
                       asChild
-                      className="w-full rounded-full text-xs font-medium border-[#E8E8E3] bg-white hover:bg-[#A8D5BA] hover:text-[#171717] hover:border-[#A8D5BA]"
+                      className="w-full rounded-full text-xs font-medium border-[#E8E8E3] bg-white hover:bg-[#A8D5BA] hover:text-[#171717] hover:border-[#A8D5BA] transition-colors"
                     >
                       <Link href={`/book-appointment?doctor=${doctor.id}`} className="flex items-center justify-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5" />
@@ -151,7 +166,7 @@ export function DoctorsSection() {
                     </Button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

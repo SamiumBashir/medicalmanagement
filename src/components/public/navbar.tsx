@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "motion/react";
+import { gsap } from "gsap";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -34,6 +36,7 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const pathname = usePathname();
+  const hotlineRef = React.useRef<HTMLAnchorElement>(null);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -44,7 +47,24 @@ export function Navbar() {
       }
     };
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    // GSAP Heartbeat micro-pulse for emergency hotline
+    const ctx = gsap.context(() => {
+      if (hotlineRef.current) {
+        gsap.to(hotlineRef.current, {
+          scale: 1.05,
+          duration: 1.1,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
+      }
+    });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      ctx.revert();
+    };
   }, []);
 
   // Do not render public Navbar on internal app, portal, or auth pages
@@ -76,8 +96,9 @@ export function Navbar() {
 
           <div className="flex items-center space-x-5">
             <a
-              href="tel:+8801900000000"
-              className="flex items-center gap-1 hover:text-[#A8D5BA] transition-colors"
+              ref={hotlineRef}
+              href="tel:10678"
+              className="flex items-center gap-1 hover:text-[#A8D5BA] transition-colors origin-center"
             >
               <Phone className="w-3.5 h-3.5 text-[#A8D5BA]" />
               <span className="font-semibold text-white">Hotline: 10678</span>
@@ -204,89 +225,103 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Slide-Over Navigation */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-[#171717]/60 backdrop-blur-sm transition-opacity">
-          <div className="fixed inset-y-0 right-0 w-full max-w-xs bg-[#FFFFFF] shadow-2xl p-6 flex flex-col justify-between overflow-y-auto border-l border-[#E8E8E3]">
-            <div>
-              {/* Header */}
-              <div className="flex items-center justify-between pb-6 border-b border-[#E8E8E3]">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#A8D5BA] flex items-center justify-center text-[#171717]">
-                    <Activity className="w-5 h-5" />
+      {/* Mobile Slide-Over Navigation with Motion AnimatePresence */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="lg:hidden fixed inset-0 z-50 bg-[#171717]/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="fixed inset-y-0 right-0 w-full max-w-xs bg-[#FFFFFF] shadow-2xl p-6 flex flex-col justify-between overflow-y-auto border-l border-[#E8E8E3]"
+            >
+              <div>
+                {/* Header */}
+                <div className="flex items-center justify-between pb-6 border-b border-[#E8E8E3]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-[#A8D5BA] flex items-center justify-center text-[#171717]">
+                      <Activity className="w-5 h-5" />
+                    </div>
+                    <span className="font-bold text-[#171717]">Apex Diagnostics</span>
                   </div>
-                  <span className="font-bold text-[#171717]">Apex Diagnostics</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <X className="w-5 h-5 text-[#70706B]" />
+                  </Button>
                 </div>
+
+                {/* Navigation links */}
+                <div className="flex flex-col py-6 space-y-1">
+                  {NAV_LINKS.map((link) => {
+                    const isActive =
+                      link.href === "/"
+                        ? pathname === "/"
+                        : pathname.startsWith(link.href);
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={cn(
+                          "flex items-center justify-between px-3 py-2.5 rounded-lg font-medium transition-colors",
+                          isActive
+                            ? "bg-[#DDEDE3] text-[#315C4A] font-semibold"
+                            : "text-[#171717] hover:bg-[#DDEDE3]/50 hover:text-[#315C4A]"
+                        )}
+                      >
+                        <span>{link.label}</span>
+                        <ChevronRight className="w-4 h-4 text-[#70706B]" />
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Bottom Actions */}
+              <div className="pt-6 border-t border-[#E8E8E3] flex flex-col space-y-3">
                 <Button
-                  variant="ghost"
-                  size="icon"
+                  variant="medical"
+                  className="w-full justify-center"
+                  asChild
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <X className="w-5 h-5 text-[#70706B]" />
+                  <Link href="/book-appointment">Book Appointment</Link>
                 </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-center border-[#E8E8E3] text-[#171717] hover:bg-[#DDEDE3]"
+                  asChild
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Link href="/tests">Browse Tests & Prices</Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-center border-[#E8E8E3] text-[#315C4A] hover:bg-[#DDEDE3]"
+                  asChild
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Link href="/login">Portal Sign In (Patient & Staff)</Link>
+                </Button>
+                <div className="pt-2 text-center text-xs text-[#70706B]">
+                  Emergency 24/7 Helpline:{" "}
+                  <span className="font-semibold text-[#171717]">10678</span>
+                </div>
               </div>
-
-              {/* Navigation links */}
-              <div className="flex flex-col py-6 space-y-1">
-                {NAV_LINKS.map((link) => {
-                  const isActive =
-                    link.href === "/"
-                      ? pathname === "/"
-                      : pathname.startsWith(link.href);
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center justify-between px-3 py-2.5 rounded-lg font-medium transition-colors",
-                        isActive
-                          ? "bg-[#DDEDE3] text-[#315C4A] font-semibold"
-                          : "text-[#171717] hover:bg-[#DDEDE3]/50 hover:text-[#315C4A]"
-                      )}
-                    >
-                      <span>{link.label}</span>
-                      <ChevronRight className="w-4 h-4 text-[#70706B]" />
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Bottom Actions */}
-            <div className="pt-6 border-t border-[#E8E8E3] flex flex-col space-y-3">
-              <Button
-                variant="medical"
-                className="w-full justify-center"
-                asChild
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Link href="/book-appointment">Book Appointment</Link>
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-center border-[#E8E8E3] text-[#171717] hover:bg-[#DDEDE3]"
-                asChild
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Link href="/tests">Browse Tests & Prices</Link>
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-center border-[#E8E8E3] text-[#315C4A] hover:bg-[#DDEDE3]"
-                asChild
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Link href="/login">Portal Sign In (Patient & Staff)</Link>
-              </Button>
-              <div className="pt-2 text-center text-xs text-[#70706B]">
-                Emergency 24/7 Helpline:{" "}
-                <span className="font-semibold text-[#171717]">10678</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

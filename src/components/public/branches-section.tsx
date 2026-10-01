@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import Link from "next/link";
 import {
@@ -7,6 +9,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion } from "motion/react";
 
 export interface BranchInfo {
   id: string;
@@ -54,10 +57,16 @@ const CLINICAL_BRANCHES: BranchInfo[] = [
 
 export function BranchesSection() {
   return (
-    <section id="branches" className="py-20 lg:py-28 bg-[#F7F7F3] border-b border-[#E8E8E3]">
+    <section id="branches" className="py-20 lg:py-28 bg-[#F7F7F3] border-b border-[#E8E8E3] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Klaas Numbering Header */}
-        <div className="text-center space-y-4 mb-14">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center space-y-4 mb-14"
+        >
           <div className="flex items-center justify-center gap-3">
             <span className="text-xs font-serif font-bold text-[#171717] w-6 h-6 rounded-full border border-[#171717]/40 flex items-center justify-center">
               4
@@ -71,13 +80,18 @@ export function BranchesSection() {
           <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#171717] tracking-tight font-normal">
             State-of-the-art diagnostic centers
           </h2>
-        </div>
+        </motion.div>
 
-        {/* Klaas Clinic Cards Grid */}
+        {/* Klaas Clinic Cards Grid with Motion */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-          {CLINICAL_BRANCHES.map((branch) => (
-            <div
+          {CLINICAL_BRANCHES.map((branch, idx) => (
+            <motion.div
               key={branch.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: idx * 0.12 }}
+              whileHover={{ y: -6, transition: { duration: 0.25 } }}
               className="bg-[#FFFFFF] border border-[#E8E8E3] rounded-[32px] p-8 flex flex-col justify-between hover:border-[#A8D5BA] transition-all duration-300 shadow-sm group"
             >
               <div className="space-y-4">
@@ -114,7 +128,7 @@ export function BranchesSection() {
                   variant="outline"
                   size="sm"
                   asChild
-                  className="w-full rounded-full border-[#E8E8E3] bg-[#F7F7F3] hover:bg-[#A8D5BA] hover:text-[#171717] hover:border-[#A8D5BA] text-xs font-semibold py-5"
+                  className="w-full rounded-full border-[#E8E8E3] bg-[#F7F7F3] hover:bg-[#A8D5BA] hover:text-[#171717] hover:border-[#A8D5BA] text-xs font-semibold py-5 transition-colors"
                 >
                   <Link href={`/branches/${branch.slug}`} className="flex items-center justify-center gap-2">
                     <span>View clinic details</span>
@@ -122,7 +136,7 @@ export function BranchesSection() {
                   </Link>
                 </Button>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

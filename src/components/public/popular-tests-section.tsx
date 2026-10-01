@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
+import { motion } from "motion/react";
 
 export interface DiagnosticTestItem {
   id: string;
@@ -76,10 +77,16 @@ const FEATURED_INVESTIGATIONS: DiagnosticTestItem[] = [
 
 export function PopularTestsSection() {
   return (
-    <section id="tests" className="py-20 lg:py-28 bg-[#171717] border-b border-[#262626]">
+    <section id="tests" className="py-20 lg:py-28 bg-[#171717] border-b border-[#262626] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Klaas Header with Button */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-14 gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col sm:flex-row sm:items-end justify-between mb-14 gap-6"
+        >
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <span className="text-xs font-serif font-bold text-[#A8D5BA] w-6 h-6 rounded-full border border-[#A8D5BA]/40 flex items-center justify-center">
@@ -95,59 +102,68 @@ export function PopularTestsSection() {
             </h3>
           </div>
 
-          <Button
-            variant="medical"
-            size="lg"
-            asChild
-            className="rounded-full px-7 text-xs sm:text-sm font-semibold shrink-0"
-          >
-            <Link href="/tests" className="flex items-center gap-2">
-              <span>All 140+ investigations</span>
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </Link>
-          </Button>
-        </div>
-
-        {/* Klaas Listing-2 Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {FEATURED_INVESTIGATIONS.map((test) => (
-            <Link
-              key={test.id}
-              href={`/tests/${test.slug}`}
-              className="bg-[#222222] border border-[#315C4A]/40 rounded-3xl p-6 hover:border-[#A8D5BA] transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1 shadow-md"
+          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+            <Button
+              variant="medical"
+              size="lg"
+              asChild
+              className="rounded-full px-7 text-xs sm:text-sm font-semibold shrink-0"
             >
-              <div>
-                <p className="text-[11px] uppercase tracking-widest font-mono text-[#A8D5BA] font-semibold mb-2">
-                  {test.category}
-                </p>
-                <h4 className="font-serif text-xl text-white group-hover:text-[#A8D5BA] transition-colors leading-snug">
-                  {test.name}
-                </h4>
-                <p className="text-xs text-[#DDEDE3]/70 leading-relaxed mt-2.5 line-clamp-3">
-                  {test.shortDescription}
-                </p>
-              </div>
+              <Link href="/tests" className="flex items-center gap-2">
+                <span>All 140+ investigations</span>
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Link>
+            </Button>
+          </motion.div>
+        </motion.div>
 
-              <div>
-                <div className="my-5 h-[1px] bg-[#315C4A]/30" />
-                <div className="flex items-center justify-between text-xs">
-                  <div>
-                    <div className="flex items-center gap-1.5 text-[11px] text-[#DDEDE3]/60 font-mono mb-1">
-                      <Clock className="w-3.5 h-3.5 text-[#A8D5BA]" />
-                      <span>{test.turnaroundTime}</span>
+        {/* Klaas Listing-2 Cards Grid with Motion Stagger */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {FEATURED_INVESTIGATIONS.map((test, idx) => (
+            <motion.div
+              key={test.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: idx * 0.1, ease: "easeOut" }}
+              whileHover={{ y: -6, scale: 1.01 }}
+            >
+              <Link
+                href={`/tests/${test.slug}`}
+                className="bg-[#222222] border border-[#315C4A]/40 rounded-3xl p-6 hover:border-[#A8D5BA] transition-all duration-300 flex flex-col justify-between group shadow-md h-full"
+              >
+                <div>
+                  <p className="text-[11px] uppercase tracking-widest font-mono text-[#A8D5BA] font-semibold mb-2">
+                    {test.category}
+                  </p>
+                  <h4 className="font-serif text-xl text-white group-hover:text-[#A8D5BA] transition-colors leading-snug">
+                    {test.name}
+                  </h4>
+                  <p className="text-xs text-[#DDEDE3]/70 leading-relaxed mt-2.5 line-clamp-3">
+                    {test.shortDescription}
+                  </p>
+                </div>
+
+                <div>
+                  <div className="my-5 h-[1px] bg-[#315C4A]/30" />
+                  <div className="flex items-center justify-between text-xs">
+                    <div>
+                      <div className="flex items-center gap-1.5 text-[11px] text-[#DDEDE3]/60 font-mono mb-1">
+                        <Clock className="w-3.5 h-3.5 text-[#A8D5BA]" />
+                        <span>{test.turnaroundTime}</span>
+                      </div>
+                      <span className="text-base font-bold text-[#A8D5BA] font-mono">
+                        {formatCurrency(test.price)}
+                      </span>
                     </div>
-                    <span className="text-base font-bold text-[#A8D5BA] font-mono">
-                      {formatCurrency(test.price)}
-                    </span>
-                  </div>
 
-                  {/* Klaas Signature Circular Arrow Button */}
-                  <div className="w-10 h-10 rounded-full bg-[#171717] border border-[#315C4A]/60 group-hover:bg-[#A8D5BA] group-hover:border-[#A8D5BA] group-hover:text-[#171717] text-[#A8D5BA] flex items-center justify-center transition-all duration-200">
-                    <ArrowRight className="w-4 h-4" />
+                    <div className="w-8 h-8 rounded-full bg-[#171717] border border-[#315C4A]/60 flex items-center justify-center text-[#A8D5BA] group-hover:bg-[#315C4A] group-hover:text-white transition-colors duration-300 shadow-sm">
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </motion.div>
           ))}
         </div>
       </div>

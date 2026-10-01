@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,13 +14,28 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion } from "motion/react";
 
 export function ServicesSection() {
+  const cardMotionProps = {
+    initial: { opacity: 0, y: 35 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, amount: 0.15 },
+    transition: { duration: 0.7, ease: "easeOut" as const },
+    whileHover: { y: -5, transition: { duration: 0.3 } },
+  };
+
   return (
-    <section id="services" className="py-20 lg:py-28 bg-[#F7F7F3] border-b border-[#E8E8E3]">
+    <section id="services" className="py-20 lg:py-28 bg-[#F7F7F3] border-b border-[#E8E8E3] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Klaas Numbering Header */}
-        <div className="flex items-center justify-center gap-3 mb-5">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center justify-center gap-3 mb-5"
+        >
           <span className="text-xs font-serif font-bold text-[#171717] w-6 h-6 rounded-full border border-[#171717]/40 flex items-center justify-center">
             1
           </span>
@@ -26,16 +43,25 @@ export function ServicesSection() {
           <span className="text-xs uppercase tracking-[0.25em] font-mono text-[#70706B] font-semibold">
             Treatments & Services
           </span>
-        </div>
+        </motion.div>
 
-        <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-center text-[#171717] tracking-tight max-w-3xl mx-auto mb-16 font-normal">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="font-serif text-4xl sm:text-5xl lg:text-6xl text-center text-[#171717] tracking-tight max-w-3xl mx-auto mb-16 font-normal"
+        >
           Specialized diagnostic disciplines
-        </h2>
+        </motion.h2>
 
         {/* Klaas Categories-2 Flex Stack */}
         <div className="space-y-10 lg:space-y-14">
           {/* Card 1: Soft Green #DDEDE3 Background */}
-          <div className="rounded-[32px] lg:rounded-[40px] bg-[#DDEDE3] border border-[#A8D5BA]/40 p-6 sm:p-10 lg:p-12 overflow-hidden shadow-sm">
+          <motion.div
+            {...cardMotionProps}
+            className="rounded-[32px] lg:rounded-[40px] bg-[#DDEDE3] border border-[#A8D5BA]/40 p-6 sm:p-10 lg:p-12 overflow-hidden shadow-sm hover:shadow-md transition-shadow group"
+          >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               {/* Image Block (5 cols) */}
               <div className="lg:col-span-5 relative rounded-2xl lg:rounded-3xl overflow-hidden aspect-[4/3] bg-white border border-[#E8E8E3] shadow-inner">
@@ -43,7 +69,7 @@ export function ServicesSection() {
                   src="/images/hero_diagnostics.jpg"
                   alt="Clinical pathology automated laboratory"
                   fill
-                  className="object-cover"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               </div>
 
@@ -106,24 +132,29 @@ export function ServicesSection() {
 
                 {/* Klaas Category Pill Button */}
                 <div className="pt-2">
-                  <Button
-                    variant="medical"
-                    size="lg"
-                    asChild
-                    className="rounded-full px-7 text-xs sm:text-sm font-semibold shadow-sm"
-                  >
-                    <Link href="/services" className="flex items-center gap-2">
-                      <span>Explore Pathology Services</span>
-                      <ArrowRight className="w-4 h-4 ml-1" />
-                    </Link>
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="inline-block">
+                    <Button
+                      variant="medical"
+                      size="lg"
+                      asChild
+                      className="rounded-full px-7 text-xs sm:text-sm font-semibold shadow-sm"
+                    >
+                      <Link href="/services" className="flex items-center gap-2">
+                        <span>Explore Pathology Services</span>
+                        <ArrowRight className="w-4 h-4 ml-1" />
+                      </Link>
+                    </Button>
+                  </motion.div>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 2: Pure White #FFFFFF Background */}
-          <div className="rounded-[32px] lg:rounded-[40px] bg-[#FFFFFF] border border-[#E8E8E3] p-6 sm:p-10 lg:p-12 overflow-hidden shadow-sm">
+          <motion.div
+            {...cardMotionProps}
+            className="rounded-[32px] lg:rounded-[40px] bg-[#FFFFFF] border border-[#E8E8E3] p-6 sm:p-10 lg:p-12 overflow-hidden shadow-sm hover:shadow-md transition-shadow group"
+          >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               {/* Content Block (7 cols) */}
               <div className="lg:col-span-7 space-y-6 order-2 lg:order-1">
@@ -184,17 +215,19 @@ export function ServicesSection() {
 
                 {/* Klaas Category Pill Button */}
                 <div className="pt-2">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    asChild
-                    className="rounded-full px-7 text-xs sm:text-sm font-semibold border-[#E8E8E3] hover:bg-[#DDEDE3] text-[#171717] hover:text-[#315C4A]"
-                  >
-                    <Link href="/services" className="flex items-center gap-2">
-                      <span>Explore Imaging Services</span>
-                      <ArrowRight className="w-4 h-4 ml-1" />
-                    </Link>
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="inline-block">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      asChild
+                      className="rounded-full px-7 text-xs sm:text-sm font-semibold border-[#E8E8E3] hover:bg-[#DDEDE3] text-[#171717] hover:text-[#315C4A]"
+                    >
+                      <Link href="/services" className="flex items-center gap-2">
+                        <span>Explore Imaging Services</span>
+                        <ArrowRight className="w-4 h-4 ml-1" />
+                      </Link>
+                    </Button>
+                  </motion.div>
                 </div>
               </div>
 
@@ -204,14 +237,17 @@ export function ServicesSection() {
                   src="/images/mri_suite.jpg"
                   alt="Apex Diagnostics 3.0 Tesla MRI suite"
                   fill
-                  className="object-cover"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 3: Off-White #F7F7F3 Card with Soft Green Touches */}
-          <div className="rounded-[32px] lg:rounded-[40px] bg-[#FFFFFF] border border-[#E8E8E3] p-6 sm:p-10 lg:p-12 overflow-hidden shadow-sm">
+          <motion.div
+            {...cardMotionProps}
+            className="rounded-[32px] lg:rounded-[40px] bg-[#FFFFFF] border border-[#E8E8E3] p-6 sm:p-10 lg:p-12 overflow-hidden shadow-sm hover:shadow-md transition-shadow group"
+          >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               {/* Image Block (5 cols) */}
               <div className="lg:col-span-5 relative rounded-2xl lg:rounded-3xl overflow-hidden aspect-[4/3] bg-[#DDEDE3] border border-[#E8E8E3] shadow-inner">
@@ -219,7 +255,7 @@ export function ServicesSection() {
                   src="/images/doctor_pathologist.jpg"
                   alt="Specialist clinical review and consultation"
                   fill
-                  className="object-cover"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               </div>
 
@@ -282,21 +318,23 @@ export function ServicesSection() {
 
                 {/* Klaas Category Pill Button */}
                 <div className="pt-2">
-                  <Button
-                    variant="medical"
-                    size="lg"
-                    asChild
-                    className="rounded-full px-7 text-xs sm:text-sm font-semibold shadow-sm"
-                  >
-                    <Link href="/services" className="flex items-center gap-2">
-                      <span>Explore Cardiac & Neuro</span>
-                      <ArrowRight className="w-4 h-4 ml-1" />
-                    </Link>
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="inline-block">
+                    <Button
+                      variant="medical"
+                      size="lg"
+                      asChild
+                      className="rounded-full px-7 text-xs sm:text-sm font-semibold shadow-sm"
+                    >
+                      <Link href="/services" className="flex items-center gap-2">
+                        <span>Explore Cardiac & Neuro</span>
+                        <ArrowRight className="w-4 h-4 ml-1" />
+                      </Link>
+                    </Button>
+                  </motion.div>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
