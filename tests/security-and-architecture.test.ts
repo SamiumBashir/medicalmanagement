@@ -168,7 +168,8 @@ async function runTestSuite() {
       orderId: orderResult.order.orderId,
       patientName: orderResult.order.patientName,
       amount: 1000,
-      method: "MOBILE_BANKING",
+      method: "BKASH",
+      transactionReference: "TESTTRX991",
       notes: "bKash TxID #9872",
     },
     { name: "Cashier Shahriar", role: "ACCOUNTANT" }

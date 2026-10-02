@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { dataStore, ReportRecord } from "@/lib/services/dataStore";
 import { generateQrDataUrl } from "@/lib/qr";
+import { publicVerifyUrl } from "@/lib/urls";
 import { FileCheck2, Printer, ShieldCheck, Download, Eye, X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -14,7 +15,7 @@ export function PatientReportsClient({ reports }: { reports: ReportRecord[] }) {
   const handleOpenReport = async (rpt: ReportRecord) => {
     setActiveReport(rpt);
     const token = (rpt as any).verificationToken || rpt.reportId;
-    const url = await generateQrDataUrl(`https://diagnosticare.org/verify/${token}`);
+    const url = await generateQrDataUrl(publicVerifyUrl(token));
     setQrUrl(url);
   };
 
@@ -245,7 +246,11 @@ export function PatientReportsClient({ reports }: { reports: ReportRecord[] }) {
               {/* Bottom Notice */}
               <div className="text-center text-[10px] text-slate-400 border-t border-slate-200 pt-3">
                 This is an electronically generated and certified medical document. To verify authenticity, visit 
-                https://diagnosticare.org/verify/{activeReport.reportId} or scan the QR code above.
+                {publicVerifyUrl(
+                  (activeReport as { verificationToken?: string }).verificationToken ||
+                    activeReport.reportId,
+                )}{" "}
+                or scan the QR code above.
               </div>
             </div>
           </div>

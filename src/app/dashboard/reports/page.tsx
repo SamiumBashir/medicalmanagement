@@ -5,6 +5,7 @@ import Link from "next/link";
 import { dataStore, ReportRecord } from "@/lib/services/dataStore";
 import { verifyReportAction, requestReportCorrectionAction } from "@/app/actions/report.actions";
 import { generateQrDataUrl } from "@/lib/qr";
+import { publicVerifyUrl } from "@/lib/urls";
 import { ShieldCheck, CheckCircle2, RotateCcw, Eye, Printer, X, Search, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +21,7 @@ export default function DoctorVerificationReportsPage() {
     setReviewReport(rpt);
     setDoctorComments(rpt.clinicalRemarks || "Clinical parameters verified against standard biological intervals.");
     const token = (rpt as any).verificationToken || rpt.reportId;
-    const url = await generateQrDataUrl(`https://diagnosticare.org/verify/${token}`);
+    const url = await generateQrDataUrl(publicVerifyUrl(token));
     setQrUrl(url);
   };
 

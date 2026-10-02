@@ -48,6 +48,15 @@ export async function getReportsAction(params?: {
   page?: number;
   limit?: number;
 }) {
-  await requireAuth();
+  const session = await requireAuth();
+  if (session.role === "PATIENT") {
+    if (!session.patientId) {
+      throw new Error("Patient profile not linked to your account.");
+    }
+    if (params?.patientId && params.patientId !== session.patientId) {
+      throw new Error("Access denied.");
+    }
+    return getReports({ ...params, patientId: session.patientId });
+  }
   return getReports(params);
 }

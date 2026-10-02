@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Metadata } from "next";
 import { LoginClient } from "./login-client";
 
@@ -8,6 +7,13 @@ export const metadata: Metadata = {
     "Secure role-based access for patients, medical consultants, lab technologists, and clinic administration.",
 };
 
-export default function LoginPage() {
-  return <LoginClient />;
+type LoginPageProps = {
+  searchParams: Promise<{ portal?: string }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const { portal } = await searchParams;
+  const patientOnly = portal === "patient";
+
+  return <LoginClient patientOnly={patientOnly} />;
 }

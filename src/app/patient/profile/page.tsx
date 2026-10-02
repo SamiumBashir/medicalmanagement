@@ -1,17 +1,11 @@
 import * as React from "react";
-import { redirect } from "next/navigation";
-import { getServerSession } from "@/lib/auth/session";
+import { requirePatientIdFromSession } from "@/lib/auth/patient-context";
 import { dataStore } from "@/lib/services/dataStore";
 import { User, Phone, Mail, MapPin, ShieldCheck, HeartPulse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default async function PatientProfilePage() {
-  const session = await getServerSession();
-  if (!session) {
-    redirect("/login?from=/patient/profile");
-  }
-
-  const patientId = session.patientId || "PAT-2026-000001";
+  const { session, patientId } = await requirePatientIdFromSession();
   const patient = dataStore.patients.find((p) => p.patientId === patientId) || {
     name: session.name,
     patientId,

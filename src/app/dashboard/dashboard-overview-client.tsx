@@ -159,7 +159,7 @@ export function DashboardOverviewClient({
 
       {/* KPI Cards: Dynamic & Strictly Filtered per Role */}
       {isMasterAdmin && (
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 xl:gap-4">
           <div className="bg-[#FFFFFF] p-5 rounded-2xl border border-[#E8E8E3] shadow-xs flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-mono uppercase text-[#70706B] font-semibold">Patients</span>
@@ -352,9 +352,9 @@ export function DashboardOverviewClient({
       )}
 
       {/* Main Charts & Telemetry (Full for Admin, Focused for specialized staff) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 xl:gap-6">
         {/* Left: Patient Throughput / Schedule Trend */}
-        <div className="lg:col-span-2 bg-[#FFFFFF] p-6 rounded-2xl border border-[#E8E8E3] shadow-xs">
+        <div className="xl:col-span-2 bg-[#FFFFFF] p-4 sm:p-6 rounded-2xl border border-[#E8E8E3] shadow-xs min-w-0">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="font-serif text-lg font-normal text-[#171717]">
@@ -464,7 +464,7 @@ export function DashboardOverviewClient({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 text-xs">
             <Link
               href="/dashboard/users"
               className="p-3.5 rounded-xl border border-[#E8E8E3] hover:border-[#315C4A] hover:bg-[#F7F7F3] transition-all flex flex-col gap-1"

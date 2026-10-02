@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { dataStore, InvoiceRecord } from "@/lib/services/dataStore";
-import { Plus, Search, Receipt, Printer, CreditCard } from "lucide-react";
+import { PAYMENT_METHODS } from "@/lib/payments/bd-payment-methods";
+import { Plus, Search, Printer, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -24,7 +25,7 @@ export default function DashboardBillingPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Patient Billing & Invoice Ledger</h1>
           <p className="text-xs text-slate-500 font-mono">
-            Line-item diagnostic invoicing, promotional discounts, and payment settlements
+            BDT invoicing — settlements via bKash, Nagad, Rocket, Upay, bank, cash & card
           </p>
         </div>
 
@@ -42,6 +43,17 @@ export default function DashboardBillingPage() {
             </Link>
           </Button>
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {PAYMENT_METHODS.map((m) => (
+          <span
+            key={m.id}
+            className="text-[10px] font-mono uppercase tracking-wide bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200"
+          >
+            {m.label}
+          </span>
+        ))}
       </div>
 
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
@@ -95,15 +107,29 @@ export default function DashboardBillingPage() {
                     </span>
                   </td>
                   <td className="py-4 px-6 text-right">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => window.print()}
-                      className="text-xs h-8 border-slate-300 gap-1"
-                    >
-                      <Printer className="w-3.5 h-3.5" />
-                      Print Slip
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      {inv.due > 0 && (
+                        <Button
+                          size="sm"
+                          asChild
+                          className="text-xs h-8 bg-teal-700 hover:bg-teal-800 text-white gap-1"
+                        >
+                          <Link href="/dashboard/payments">
+                            <CreditCard className="w-3.5 h-3.5" />
+                            Collect
+                          </Link>
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.print()}
+                        className="text-xs h-8 border-slate-300 gap-1"
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                        Print
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

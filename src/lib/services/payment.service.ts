@@ -1,5 +1,10 @@
 import { Payment } from "@/models/Payment";
 import { Invoice } from "@/models/Invoice";
+import {
+  normalizePaymentMethod,
+  validatePaymentReference,
+  type PaymentMethod,
+} from "@/lib/payments/bd-payment-methods";
 import { isMongoAvailable } from "./dbHelper";
 import { dataStore, PaymentRecord } from "./dataStore";
 import { createAuditEntry } from "./audit.service";
@@ -9,7 +14,8 @@ export interface RecordPaymentInput {
   orderId?: string;
   patientName: string;
   amount: number;
-  method: "CASH" | "CARD" | "MOBILE_BANKING";
+  method: PaymentMethod | string;
+  transactionReference?: string;
   notes?: string;
 }
 
@@ -47,6 +53,12 @@ export async function recordPaymentTransaction(
     throw new Error("Payment amount must be greater than zero.");
   }
 
+  const method = normalizePaymentMethod(input.method);
+  const refError = validatePaymentReference(method, input.transactionReference);
+  if (refError) {
+    throw new Error(refError);
+  }
+
   // Find linked invoice
   const invoice = dataStore.invoices.find(
     (i) => i.invoiceId.toUpperCase() === input.invoiceId.toUpperCase()
@@ -62,7 +74,8 @@ export async function recordPaymentTransaction(
     orderId: input.orderId || invoice?.orderId || "ORD-2026-000001",
     patientName: input.patientName,
     amount: input.amount,
-    method: input.method,
+    method,
+    transactionReference: input.transactionReference?.trim() || undefined,
     receivedBy: actor.name,
     date: new Date().toISOString(),
     notes: input.notes,
@@ -89,7 +102,8 @@ export async function recordPaymentTransaction(
       await Payment.create({
         paymentId: transactionId,
         amount: input.amount,
-        method: input.method,
+        method,
+        transactionReference: input.transactionReference,
         notes: input.notes,
       });
 
@@ -118,7 +132,9 @@ export async function recordPaymentTransaction(
     action: "PAYMENT_RECORDED",
     entity: "Payment",
     entityId: transactionId,
-    details: `Collected ৳${input.amount} via ${input.method} for invoice ${input.invoiceId}`,
+    details: `Collected ৳${input.amount} via ${method} for invoice ${input.invoiceId}${
+      input.transactionReference ? ` (Ref: ${input.transactionReference})` : ""
+    }`,
   });
 
   return paymentRecord;

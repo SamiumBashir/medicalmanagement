@@ -1,23 +1,19 @@
 import * as React from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { dataStore } from "@/lib/services/dataStore";
-import { getServerSession } from "@/lib/auth/session";
+import { requirePatientIdFromSession } from "@/lib/auth/patient-context";
 import { Calendar, Plus, MapPin, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default async function PatientAppointmentsPage() {
-  const session = await getServerSession();
-  if (!session) {
-    redirect("/login?from=/patient/appointments");
-  }
-
+  const { session, patientId } = await requirePatientIdFromSession();
   const patientName = session.name || "Patient";
+  const patientPhone = dataStore.patients.find((p) => p.patientId === patientId)?.phone;
 
   const appointments = dataStore.appointments.filter(
     (a) =>
       a.patientName.toLowerCase() === patientName.toLowerCase() ||
-      (session.patientId && a.patientPhone === (session as any).phone)
+      (patientPhone && a.patientPhone === patientPhone),
   );
 
   return (

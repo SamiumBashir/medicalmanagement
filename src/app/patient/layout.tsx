@@ -40,10 +40,9 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
     email: string;
     patientId?: string;
   }>({
-    name: "Tanvir Ahmed",
+    name: "Patient",
     role: "PATIENT",
-    email: "patient@diagnoaid.com",
-    patientId: "PAT-2026-000001",
+    email: "",
   });
 
   React.useEffect(() => {
@@ -56,7 +55,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
             name: data.user.name,
             role,
             email: data.user.email,
-            patientId: data.user.patientId || "PAT-2026-000001",
+            patientId: data.user.patientId,
           });
 
           // Non-admin staff attempting to visit patient portal are redirected to staff dashboard
@@ -76,9 +75,9 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
   const isMasterAdmin = currentUser.role === "SUPER_ADMIN" || currentUser.role === "ADMIN";
 
   return (
-    <div className="min-h-screen bg-[#F7F7F3] text-[#171717] flex flex-col md:flex-row">
-      {/* Mobile Header */}
-      <div className="md:hidden bg-[#171717] text-white p-4 flex items-center justify-between sticky top-0 z-40 border-b border-[#262626]">
+    <div className="min-h-screen bg-[#F7F7F3] text-[#171717] flex flex-col lg:flex-row">
+      {/* Mobile / tablet header (below 1024px) */}
+      <div className="lg:hidden bg-[#171717] text-white p-4 flex items-center justify-between sticky top-0 z-40 border-b border-[#262626]">
         <Link href="/patient/dashboard" className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-full bg-[#A8D5BA] flex items-center justify-center text-[#171717]">
             <Activity className="w-4 h-4" />
@@ -99,10 +98,19 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
         </button>
       </div>
 
+      {mobileOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 z-20 bg-[#171717]/60 backdrop-blur-[2px] lg:hidden"
+          aria-label="Close navigation menu"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`fixed md:sticky top-0 z-30 h-screen w-72 bg-[#171717] text-[#DDEDE3] p-5 flex flex-col justify-between border-r border-[#262626] transition-transform duration-200 overflow-y-auto ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        className={`fixed lg:sticky top-0 z-30 h-screen w-[min(100%,18rem)] lg:w-60 xl:w-72 shrink-0 bg-[#171717] text-[#DDEDE3] p-5 flex flex-col justify-between border-r border-[#262626] transition-transform duration-200 overflow-y-auto ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         <div>
@@ -153,7 +161,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
                   {currentUser.name}
                 </span>
                 <span className="text-[11px] font-mono text-[#A8D5BA] block truncate">
-                  {currentUser.patientId || "PAT-2026-000001"}
+                  {currentUser.patientId || "Profile pending link"}
                 </span>
               </div>
             </div>
@@ -212,7 +220,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-6 md:p-10 max-w-7xl w-full">
+      <main className="flex-1 min-w-0 p-4 sm:p-6 xl:p-10 max-w-7xl w-full overflow-x-auto">
         {children}
       </main>
     </div>

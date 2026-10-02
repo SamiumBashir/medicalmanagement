@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   Phone,
-  Calendar,
   Menu,
   X,
   FileCheck2,
@@ -40,15 +39,10 @@ export function Navbar() {
 
   React.useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll);
 
-    // GSAP Heartbeat micro-pulse for emergency hotline
     const ctx = gsap.context(() => {
       if (hotlineRef.current) {
         gsap.to(hotlineRef.current, {
@@ -67,7 +61,10 @@ export function Navbar() {
     };
   }, []);
 
-  // Do not render public Navbar on internal app, portal, or auth pages
+  React.useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   const isExcluded =
     pathname?.startsWith("/dashboard") ||
     pathname?.startsWith("/patient") ||
@@ -79,84 +76,77 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full transition-all duration-300">
-      {/* Top Notification / Emergency Bar: Deep Charcoal #171717 */}
-      <div className="bg-[#171717] text-[#DDEDE3] text-xs py-2 px-4 border-b border-[#315C4A]/40">
-        <div className="w-full px-2 sm:px-4 lg:px-8 xl:px-12 flex flex-col sm:flex-row justify-between items-center gap-2">
-          <div className="flex items-center space-x-4">
-            <span className="flex items-center gap-1.5 text-[#A8D5BA] font-medium">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#A8D5BA]" />
-              ISO 15189:2022 & CAP Accredited Diagnostic Center
+      {/* Top bar — compact below 1280px; full copy at xl (≥1280px) */}
+      <div className="bg-[#171717] text-[#DDEDE3] text-[10px] sm:text-xs py-2 px-3 sm:px-4 border-b border-[#315C4A]/40">
+        <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 xl:px-10 2xl:px-12 flex flex-col lg:flex-row justify-between items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-3 gap-y-1 max-w-full">
+            <span className="flex items-center gap-1.5 text-[#A8D5BA] font-medium text-center lg:text-left">
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-[#A8D5BA]" />
+              <span className="xl:hidden">ISO 15189:2022 & CAP Accredited</span>
+              <span className="hidden xl:inline">
+                ISO 15189:2022 & CAP Accredited Diagnostic Center
+              </span>
             </span>
-            <span className="hidden md:inline-block text-[#70706B]">|</span>
-            <span className="hidden md:flex items-center gap-1 text-[#DDEDE3]">
+            <span className="hidden xl:inline-block text-[#70706B]">|</span>
+            <span className="hidden xl:flex items-center gap-1 text-[#DDEDE3]">
               <Clock className="w-3.5 h-3.5 text-[#A8D5BA]" />
               Sample Collection: 24/7 Open (Emergency Labs)
             </span>
           </div>
 
-          <div className="flex items-center space-x-5">
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
             <a
               ref={hotlineRef}
               href="tel:10678"
-              className="flex items-center gap-1 hover:text-[#A8D5BA] transition-colors origin-center"
+              className="flex items-center gap-1 hover:text-[#A8D5BA] transition-colors origin-center whitespace-nowrap"
             >
               <Phone className="w-3.5 h-3.5 text-[#A8D5BA]" />
-              <span className="font-semibold text-white">Hotline: 10678</span>
+              <span className="font-semibold text-white xl:hidden">10678</span>
+              <span className="font-semibold text-white hidden xl:inline">
+                Hotline: 10678
+              </span>
             </a>
-            <span className="text-[#70706B]">|</span>
+            <span className="hidden sm:inline text-[#70706B]">|</span>
             <Link
               href="/verify/REP-2026-001"
-              className="flex items-center gap-1 text-[#A8D5BA] hover:text-white transition-colors font-medium"
+              className="hidden sm:inline-flex items-center gap-1 text-[#A8D5BA] hover:text-white transition-colors font-medium whitespace-nowrap"
             >
               <FileCheck2 className="w-3.5 h-3.5" />
-              Verify Report Online
-            </Link>
-            <span className="text-[#70706B]">|</span>
-            <Link
-              href="/login"
-              className="flex items-center gap-1 text-[#DDEDE3] hover:text-[#A8D5BA] transition-colors font-medium"
-            >
-              <User className="w-3 h-3 text-[#A8D5BA]" />
-              Portal Sign In
-            </Link>
-            <span className="text-[#70706B]">|</span>
-            <Link
-              href="/login"
-              className="text-[#70706B] hover:text-white transition-colors text-[11px]"
-            >
-              Staff Access
+              <span className="xl:hidden">Verify Report</span>
+              <span className="hidden xl:inline">Verify Report Online</span>
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Main Navigation Bar: Pure White #FFFFFF with Soft Gray #E8E8E3 border */}
       <nav
         className={cn(
           "w-full transition-all duration-300 border-b",
           isScrolled
-            ? "bg-[#FFFFFF]/95 backdrop-blur-md border-[#E8E8E3] shadow-sm py-3.5"
-            : "bg-[#FFFFFF] border-[#E8E8E3] py-4"
+            ? "bg-[#FFFFFF]/95 backdrop-blur-md border-[#E8E8E3] shadow-sm py-3 xl:py-3.5"
+            : "bg-[#FFFFFF] border-[#E8E8E3] py-3.5 xl:py-4",
         )}
       >
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 flex items-center justify-between">
-          {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full bg-[#A8D5BA] flex items-center justify-center text-[#171717] shadow-sm group-hover:bg-[#315C4A] group-hover:text-white transition-all duration-300">
+        {/* Below 1280px: drawer. At xl (1280+): single-row grid so links never wrap */}
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-6 xl:px-5 2xl:px-12 flex items-center gap-3 xl:grid xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:items-center xl:gap-x-2 2xl:gap-x-5">
+          <Link
+            href="/"
+            className="flex items-center gap-2 sm:gap-3 group shrink-0 xl:max-w-[11.5rem] 2xl:max-w-none"
+          >
+            <div className="w-9 h-9 sm:w-10 sm:h-10 xl:w-9 xl:h-9 2xl:w-10 2xl:h-10 rounded-full bg-[#A8D5BA] flex items-center justify-center text-[#171717] shadow-sm group-hover:bg-[#315C4A] group-hover:text-white transition-all duration-300 shrink-0">
               <Activity className="w-5 h-5 stroke-[2.5]" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-serif text-2xl tracking-tight text-[#171717] leading-tight">
+            <div className="flex flex-col min-w-0">
+              <span className="font-serif text-lg sm:text-xl xl:text-lg 2xl:text-2xl tracking-tight text-[#171717] leading-tight whitespace-nowrap">
                 Apex Diagnostics
               </span>
-              <span className="text-[10px] uppercase font-mono tracking-widest text-[#70706B] -mt-0.5">
+              <span className="text-[9px] sm:text-[10px] uppercase font-mono tracking-widest text-[#70706B] -mt-0.5 hidden 2xl:block">
                 Precision Medical Center
               </span>
             </div>
           </Link>
 
-          {/* Desktop Navigation Links (Multi-page routes) */}
-          <div className="hidden lg:flex items-center space-x-1">
+          <div className="hidden xl:flex items-center justify-center flex-nowrap gap-0 min-w-0 overflow-hidden">
             {NAV_LINKS.map((link) => {
               const isActive =
                 link.href === "/"
@@ -167,10 +157,10 @@ export function Navbar() {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-full transition-colors",
+                    "shrink-0 px-1.5 2xl:px-3 py-1.5 text-[10px] 2xl:text-xs font-semibold uppercase tracking-wide 2xl:tracking-wider rounded-full transition-colors whitespace-nowrap",
                     isActive
                       ? "text-[#315C4A] bg-[#DDEDE3]"
-                      : "text-[#171717] hover:text-[#315C4A] hover:bg-[#DDEDE3]/50"
+                      : "text-[#171717] hover:text-[#315C4A] hover:bg-[#DDEDE3]/50",
                   )}
                 >
                   {link.label}
@@ -179,35 +169,60 @@ export function Navbar() {
             })}
           </div>
 
-          {/* Desktop Right CTAs */}
-          <div className="hidden md:flex items-center space-x-3">
+          <div className="hidden lg:flex xl:hidden items-center gap-2 shrink-0 ml-auto">
+            <Button
+              variant="medical"
+              size="sm"
+              asChild
+              className="rounded-full px-4 text-xs font-semibold shadow-sm"
+            >
+              <Link href="/book-appointment">Book</Link>
+            </Button>
+          </div>
+
+          <div className="hidden xl:flex items-center gap-1.5 2xl:gap-3 shrink-0 justify-end">
+            <Link
+              href="/login?portal=patient"
+              title="Patient sign in — reports and appointments"
+              className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-[11px] font-medium text-[#70706B] hover:text-[#315C4A] hover:bg-[#DDEDE3]/60 transition-colors whitespace-nowrap"
+            >
+              <User className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden min-[1400px]:inline">My account</span>
+            </Link>
             <Button
               variant="outline"
               size="sm"
               asChild
-              className="rounded-full border-[#E8E8E3] text-[#171717] hover:bg-[#DDEDE3] hover:text-[#315C4A] text-xs px-4"
+              className="rounded-full border-[#E8E8E3] text-[#171717] hover:bg-[#DDEDE3] hover:text-[#315C4A] text-xs h-8 px-2.5 2xl:h-9 2xl:px-4"
             >
-              <a href="tel:10678" className="flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-[#315C4A]" />
-                <span>10678</span>
+              <a href="tel:10678" className="flex items-center gap-1">
+                <Phone className="w-3.5 h-3.5 text-[#315C4A] shrink-0" />
+                <span className="hidden min-[1380px]:inline">10678</span>
               </a>
             </Button>
 
             <Button
               variant="medical"
-              size="default"
+              size="sm"
               asChild
-              className="rounded-full px-6 text-xs font-semibold shadow-sm active:scale-[0.98]"
+              className="rounded-full px-3 2xl:px-6 text-[11px] 2xl:text-xs font-semibold shadow-sm h-8 2xl:h-10 active:scale-[0.98]"
             >
-              <Link href="/book-appointment" className="flex items-center gap-1.5">
+              <Link href="/book-appointment" className="flex items-center gap-1 whitespace-nowrap">
                 <span>Book online</span>
-                <span className="text-xs">→</span>
+                <span className="text-[10px] 2xl:text-xs">→</span>
               </Link>
             </Button>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="flex lg:hidden items-center space-x-2">
+          <div className="flex xl:hidden items-center gap-2 shrink-0 ml-auto">
+            <Button
+              variant="medical"
+              size="sm"
+              asChild
+              className="rounded-full px-3 text-xs font-semibold lg:hidden"
+            >
+              <Link href="/book-appointment">Book</Link>
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -225,7 +240,6 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Slide-Over Navigation with Motion AnimatePresence */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -233,7 +247,7 @@ export function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="lg:hidden fixed inset-0 z-50 bg-[#171717]/60 backdrop-blur-sm"
+            className="xl:hidden fixed inset-0 z-50 bg-[#171717]/60 backdrop-blur-sm"
           >
             <motion.div
               initial={{ x: "100%" }}
@@ -243,7 +257,6 @@ export function Navbar() {
               className="fixed inset-y-0 right-0 w-full max-w-xs bg-[#FFFFFF] shadow-2xl p-6 flex flex-col justify-between overflow-y-auto border-l border-[#E8E8E3]"
             >
               <div>
-                {/* Header */}
                 <div className="flex items-center justify-between pb-6 border-b border-[#E8E8E3]">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-[#A8D5BA] flex items-center justify-center text-[#171717]">
@@ -260,7 +273,6 @@ export function Navbar() {
                   </Button>
                 </div>
 
-                {/* Navigation links */}
                 <div className="flex flex-col py-6 space-y-1">
                   {NAV_LINKS.map((link) => {
                     const isActive =
@@ -276,7 +288,7 @@ export function Navbar() {
                           "flex items-center justify-between px-3 py-2.5 rounded-lg font-medium transition-colors",
                           isActive
                             ? "bg-[#DDEDE3] text-[#315C4A] font-semibold"
-                            : "text-[#171717] hover:bg-[#DDEDE3]/50 hover:text-[#315C4A]"
+                            : "text-[#171717] hover:bg-[#DDEDE3]/50 hover:text-[#315C4A]",
                         )}
                       >
                         <span>{link.label}</span>
@@ -287,7 +299,6 @@ export function Navbar() {
                 </div>
               </div>
 
-              {/* Bottom Actions */}
               <div className="pt-6 border-t border-[#E8E8E3] flex flex-col space-y-3">
                 <Button
                   variant="medical"
@@ -305,14 +316,16 @@ export function Navbar() {
                 >
                   <Link href="/tests">Browse Tests & Prices</Link>
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-center border-[#E8E8E3] text-[#315C4A] hover:bg-[#DDEDE3]"
-                  asChild
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Link href="/login">Portal Sign In (Patient & Staff)</Link>
-                </Button>
+                <p className="text-center text-sm text-[#70706B] pt-1">
+                  Already registered?{" "}
+                  <Link
+                    href="/login?portal=patient"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="font-semibold text-[#315C4A] hover:underline"
+                  >
+                    Sign in
+                  </Link>
+                </p>
                 <div className="pt-2 text-center text-xs text-[#70706B]">
                   Emergency 24/7 Helpline:{" "}
                   <span className="font-semibold text-[#171717]">10678</span>

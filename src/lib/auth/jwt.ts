@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { UserRole } from "@/types";
+import { getAuthSecret } from "@/lib/auth/auth-secret";
 
-const AUTH_SECRET = process.env.AUTH_SECRET || "development_super_secret_diagnostic_center_key_2026_auth";
-export const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME || "dcms_auth_token";
+export { AUTH_COOKIE_NAME } from "@/lib/auth/constants";
 
 export interface TokenPayload {
   userId: string;
@@ -14,13 +14,20 @@ export interface TokenPayload {
   patientId?: string;
 }
 
+function secret(): string {
+  return getAuthSecret();
+}
+
 export function signToken(payload: TokenPayload, expiresIn: string = "7d"): string {
-  return jwt.sign(payload, AUTH_SECRET, { expiresIn: expiresIn as jwt.SignOptions["expiresIn"] });
+  return jwt.sign(payload, secret(), {
+    expiresIn: expiresIn as jwt.SignOptions["expiresIn"],
+    algorithm: "HS256",
+  });
 }
 
 export function verifyToken(token: string): TokenPayload | null {
   try {
-    return jwt.verify(token, AUTH_SECRET) as TokenPayload;
+    return jwt.verify(token, secret(), { algorithms: ["HS256"] }) as TokenPayload;
   } catch {
     return null;
   }

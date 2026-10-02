@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { isValidDemoPassword } from "@/lib/auth/demo-credentials";
 import { signToken, comparePassword, AUTH_COOKIE_NAME } from "@/lib/auth/jwt";
 import { UserRole } from "@/types";
 import { isMongoAvailable, formatErrorResponse } from "@/lib/services/dbHelper";
@@ -70,7 +71,14 @@ export async function POST(req: NextRequest) {
         let patientId: string | undefined;
         if (dbUser.role === "PATIENT") {
           const pat = await Patient.findOne({ userId: dbUser._id }).lean();
-          patientId = pat ? (pat as any).patientId : undefined;
+          patientId = pat ? (pat as { patientId: string }).patientId : undefined;
+          if (!patientId) {
+            return formatErrorResponse(
+              "PATIENT_PROFILE_MISSING",
+              "Patient account is not linked to a medical record.",
+              403,
+            );
+          }
         }
 
         // Update last login
@@ -92,14 +100,16 @@ export async function POST(req: NextRequest) {
       const demoAccount = DEMO_USERS[lowerEmail];
       if (demoAccount) {
         // Enforce standard demo password check
-        const isDemoPasswordValid =
-          password === "Password123!" ||
-          password === "admin123" ||
-          password === "password" ||
-          process.env.NODE_ENV !== "production";
-
-        if (!isDemoPasswordValid) {
+        if (!isValidDemoPassword(password)) {
           return formatErrorResponse("INVALID_CREDENTIALS", "Invalid email address or password.", 401);
+        }
+
+        if (demoAccount.role === "PATIENT" && !demoAccount.patientId) {
+          return formatErrorResponse(
+            "PATIENT_PROFILE_MISSING",
+            "Patient account is not linked to a medical record.",
+            403,
+          );
         }
 
         authenticatedPayload = {

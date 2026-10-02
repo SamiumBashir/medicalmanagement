@@ -1,3 +1,4 @@
+import type { PaymentMethod } from "@/lib/payments/bd-payment-methods";
 import { MOCK_TESTS, MOCK_DOCTORS, MOCK_BRANCHES, MOCK_REPORT_SAMPLE } from "./mockData";
 import { UserRole, SampleStatus, LabResultFlag, ReportStatus, AppointmentStatus, TokenStatus } from "@/types";
 
@@ -122,7 +123,8 @@ export interface PaymentRecord {
   orderId: string;
   patientName: string;
   amount: number;
-  method: "CASH" | "CARD" | "MOBILE_BANKING";
+  method: PaymentMethod | "MOBILE_BANKING";
+  transactionReference?: string;
   receivedBy: string;
   date: string;
   notes?: string;
@@ -419,6 +421,21 @@ function initializeStore(): GlobalDataStore {
       status: "PARTIAL",
       date: "2026-09-29T09:30:00Z",
     },
+    {
+      id: "inv-3",
+      invoiceId: "INV-2026-001247",
+      orderId: "ORD-2026-000125",
+      patientId: "PAT-2026-000001",
+      patientName: "Tanvir Ahmed",
+      items: [{ description: "Thyroid Profile (T3, T4, TSH)", amount: 950 }],
+      subtotal: 950,
+      discount: 95,
+      total: 855,
+      paid: 0,
+      due: 855,
+      status: "DUE",
+      date: "2026-09-30T10:00:00Z",
+    },
   ];
 
   const initialPayments: PaymentRecord[] = [
@@ -430,9 +447,10 @@ function initializeStore(): GlobalDataStore {
       patientName: "Tanvir Ahmed",
       amount: 2385,
       method: "CARD",
+      transactionReference: "Auth-981240",
       receivedBy: "Cashier Shahriar",
       date: "2026-09-29T08:17:00Z",
-      notes: "Visa POS Authorized - Ref: 981240",
+      notes: "Visa POS settlement",
     },
     {
       id: "pay-2",
@@ -441,10 +459,11 @@ function initializeStore(): GlobalDataStore {
       orderId: "ORD-2026-000124",
       patientName: "Nusrat Jahan Chowdhury",
       amount: 2000,
-      method: "MOBILE_BANKING",
+      method: "BKASH",
+      transactionReference: "9JK81A78B",
       receivedBy: "Cashier Shahriar",
       date: "2026-09-29T09:32:00Z",
-      notes: "bKash TrxID: 9JK81A78B",
+      notes: "bKash personal → merchant payment",
     },
   ];
 

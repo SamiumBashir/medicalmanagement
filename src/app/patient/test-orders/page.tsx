@@ -1,18 +1,12 @@
 import * as React from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { dataStore } from "@/lib/services/dataStore";
-import { getServerSession } from "@/lib/auth/session";
+import { requirePatientIdFromSession } from "@/lib/auth/patient-context";
 import { FileText, Plus, Clock, CheckCircle2, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default async function PatientTestOrdersPage() {
-  const session = await getServerSession();
-  if (!session) {
-    redirect("/login?from=/patient/test-orders");
-  }
-
-  const patientId = session.patientId || "PAT-2026-000001";
+  const { patientId } = await requirePatientIdFromSession();
   const orders = dataStore.orders.filter((o) => o.patientId === patientId);
 
   return (

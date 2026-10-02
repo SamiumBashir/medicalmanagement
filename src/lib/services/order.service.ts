@@ -51,6 +51,10 @@ export async function createOrderTransaction(
     patientId = newPat.patientId;
   }
 
+  if (!patientId) {
+    throw new Error("Unable to resolve patient record for this order.");
+  }
+
   const orderNum = dataStore.orders.length + 1;
   const orderId = `ORD-2026-${String(orderNum).padStart(6, "0")}`;
 
@@ -60,7 +64,7 @@ export async function createOrderTransaction(
   const newOrder: TestOrderRecord = {
     id: `ord-${Date.now()}`,
     orderId,
-    patientId: patientId || "PAT-2026-000001",
+    patientId,
     patientName: input.patientName.trim(),
     patientPhone: input.patientPhone.trim(),
     branchId: branch.id,

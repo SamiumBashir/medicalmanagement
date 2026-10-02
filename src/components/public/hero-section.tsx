@@ -118,7 +118,7 @@ export function HeroSection() {
           {/* Klaas Large Serif Heading */}
           <motion.h1
             variants={itemVariants}
-            className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-normal text-[#171717] tracking-tight leading-[1.06]"
+            className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-normal text-[#171717] tracking-tight leading-[1.08]"
           >
             Excellence in diagnostic medicine
           </motion.h1>

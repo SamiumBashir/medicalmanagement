@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createOrderTransaction, getOrders } from "@/lib/services/order.service";
+
+import { authorizeClinicalListAccess } from "@/lib/auth/api-access";
+import { AuthError } from "@/lib/auth/session";
 import { getServerSession } from "@/lib/auth/session";
-import { formatErrorResponse, formatSuccessResponse } from "@/lib/services/dbHelper";
+import { hasPermission } from "@/lib/permissions";
+import { checkRateLimit } from "@/lib/security/rateLimit";
+import { createOrderTransaction, getOrders } from "@/lib/services/order.service";
+import { formatErrorResponse } from "@/lib/services/dbHelper";
 
 const createOrderSchema = z.object({
   patientName: z.string().min(2, "Patient name is required"),
@@ -18,14 +23,18 @@ const createOrderSchema = z.object({
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const patientId = searchParams.get("patientId") || undefined;
+    const requestedPatientId = searchParams.get("patientId") || undefined;
     const branchId = searchParams.get("branchId") || undefined;
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "20", 10);
 
+    const { patientId } = await authorizeClinicalListAccess(requestedPatientId);
     const result = await getOrders({ patientId, branchId, page, limit });
     return NextResponse.json({ success: true, ...result });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof AuthError) {
+      return formatErrorResponse(error.code, error.message, error.statusCode);
+    }
     console.error("Fetch orders error:", error);
     return formatErrorResponse("FETCH_FAILED", "Failed to retrieve orders", 500);
   }
@@ -33,6 +42,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
     const body = await req.json();
     const parsed = createOrderSchema.safeParse(body);
 
@@ -40,11 +51,26 @@ export async function POST(req: NextRequest) {
       return formatErrorResponse(
         "VALIDATION_ERROR",
         parsed.error.issues.map((i) => i.message).join(", "),
-        400
+        400,
       );
     }
 
     const session = await getServerSession();
+    if (session) {
+      const ok =
+        session.role === "PATIENT" ||
+        hasPermission(session.role, "billing.create") ||
+        hasPermission(session.role, "patients.create");
+      if (!ok) {
+        return formatErrorResponse("FORBIDDEN", "Permission denied.", 403);
+      }
+    } else {
+      const rl = checkRateLimit(`order-post:${ip}`, 20, 60_000);
+      if (!rl.success) {
+        return formatErrorResponse("RATE_LIMIT", "Too many requests.", 429);
+      }
+    }
+
     const actor = session
       ? { name: session.name, role: session.role }
       : { name: parsed.data.patientName, role: "PATIENT" };
@@ -60,7 +86,7 @@ export async function POST(req: NextRequest) {
         patientAge: parsed.data.patientAge,
         patientGender: parsed.data.patientGender,
       },
-      actor
+      actor,
     );
 
     return NextResponse.json({
@@ -70,8 +96,9 @@ export async function POST(req: NextRequest) {
       tokenNumber: result.tokenNumber,
       message: `Diagnostic requisition ${result.order.orderId} registered successfully. Queue token ${result.tokenNumber} issued.`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Order creation error:", error);
-    return formatErrorResponse("ORDER_FAILED", error.message || "Failed to process diagnostic order", 500);
+    const msg = error instanceof Error ? error.message : "Failed to process order";
+    return formatErrorResponse("ORDER_FAILED", msg, 500);
   }
 }

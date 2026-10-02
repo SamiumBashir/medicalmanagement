@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Metadata } from "next";
 import { getReportById } from "@/lib/services/report.service";
 import { generateQrDataUrl } from "@/lib/qr";
+import { publicVerifyUrl } from "@/lib/urls";
 import { CheckCircle2, ShieldAlert, ShieldCheck, ChevronRight, FileCheck, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -25,9 +26,7 @@ export default async function VerifyReportPage({ params }: PageProps) {
   const report = await getReportById(reportId);
   const token = (report as any)?.verificationToken || reportId;
 
-  const qrUrl = await generateQrDataUrl(
-    `https://diagnosticare.org/verify/${token}`
-  );
+  const qrUrl = await generateQrDataUrl(publicVerifyUrl(token));
 
   return (
     <div className="min-h-screen bg-[#F7F7F3] pb-20">

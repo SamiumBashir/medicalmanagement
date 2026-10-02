@@ -1,8 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { dataStore } from "@/lib/services/dataStore";
-import { getServerSession } from "@/lib/auth/session";
+import { requirePatientIdFromSession } from "@/lib/auth/patient-context";
 import {
   Calendar,
   FileText,
@@ -16,13 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 export default async function PatientDashboardPage() {
-  const session = await getServerSession();
-  if (!session) {
-    redirect("/login?from=/patient/dashboard");
-  }
-
-  // Derive patient identity securely from authenticated server session
-  const patientId = session.patientId || "PAT-2026-000001";
+  const { session, patientId } = await requirePatientIdFromSession();
   const patientName = session.name || "Patient";
 
   const appointments = dataStore.appointments.filter(

@@ -108,7 +108,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: targetEmail, password: "demo" }),
+        body: JSON.stringify({ email: targetEmail, password: "demo123456" }),
       });
       const data = await res.json();
       if (data.success) {
@@ -263,9 +263,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isAllowed = isRouteAllowed(currentUser.role, pathname);
 
   return (
-    <div className="min-h-screen bg-[#F7F7F3] text-[#171717] flex flex-col md:flex-row">
-      {/* Mobile Topbar */}
-      <div className="md:hidden bg-[#171717] text-white p-4 flex items-center justify-between sticky top-0 z-50 border-b border-[#315C4A]/40">
+    <div className="min-h-screen bg-[#F7F7F3] text-[#171717] flex flex-col lg:flex-row">
+      {/* Mobile / tablet topbar (below 1024px) */}
+      <div className="lg:hidden bg-[#171717] text-white p-4 flex items-center justify-between sticky top-0 z-50 border-b border-[#315C4A]/40">
         <Link href="/dashboard" className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-full bg-[#A8D5BA] flex items-center justify-center text-[#171717]">
             <Activity className="w-4 h-4" />
@@ -286,10 +286,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </button>
       </div>
 
+      {sidebarOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 z-30 bg-[#171717]/60 backdrop-blur-[2px] lg:hidden"
+          aria-label="Close navigation menu"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`fixed md:sticky top-0 z-40 h-screen w-72 bg-[#171717] text-[#DDEDE3] flex flex-col justify-between border-r border-[#262626] transition-transform duration-200 overflow-y-auto ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        className={`fixed lg:sticky top-0 z-40 h-screen w-[min(100%,18rem)] lg:w-60 xl:w-72 shrink-0 bg-[#171717] text-[#DDEDE3] flex flex-col justify-between border-r border-[#262626] transition-transform duration-200 overflow-y-auto ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         <div className="p-5">
@@ -400,16 +409,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Navbar */}
-        <header className="h-16 bg-[#FFFFFF] border-b border-[#E8E8E3] px-6 sm:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+        <header className="min-h-16 bg-[#FFFFFF] border-b border-[#E8E8E3] px-4 sm:px-6 xl:px-8 py-2 lg:py-0 flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 sticky top-0 z-30 shadow-xs">
           {/* Role Portal Title / Search */}
-          <div className="flex items-center gap-4 flex-1 max-w-xl">
-            <div className="flex items-center gap-2">
-              <span className="font-serif text-lg text-[#171717] font-semibold hidden lg:inline">
+          <div className="flex items-center gap-3 flex-1 min-w-0 w-full lg:w-auto lg:max-w-xl order-1">
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="font-serif text-base xl:text-lg text-[#171717] font-semibold hidden xl:inline truncate max-w-[12rem]">
                 {portalMeta.portalName}
               </span>
             </div>
 
-            <div className="relative w-full max-w-xs">
+            <div className="relative w-full min-w-0 max-w-full sm:max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#70706B]" />
               <Input
                 placeholder={
@@ -427,8 +436,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           {/* Quick Demo Role Switcher for instant testing */}
-          <div className="flex items-center gap-3">
-            <div className="hidden xl:flex items-center gap-1.5 bg-[#F7F7F3] p-1 rounded-full border border-[#E8E8E3] text-xs">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 order-2 ml-auto lg:ml-0">
+            <div className="hidden xl:flex items-center gap-1 bg-[#F7F7F3] p-1 rounded-full border border-[#E8E8E3] text-[10px] xl:text-xs max-w-[min(100vw,36rem)] 2xl:max-w-[42rem] overflow-x-auto">
               <span className="text-[10px] font-semibold text-[#70706B] px-2 uppercase tracking-wider">
                 Switch Portal:
               </span>
@@ -511,7 +520,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Page Content / Route Guard Restriction */}
-        <main className="p-6 sm:p-8 flex-1">
+        <main className="p-4 sm:p-6 xl:p-8 flex-1 min-w-0 overflow-x-auto">
           {isAllowed ? (
             children
           ) : (

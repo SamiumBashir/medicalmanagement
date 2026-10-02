@@ -80,12 +80,19 @@ const DEMO_ROLES: DemoRole[] = [
   },
 ];
 
-export function LoginClient() {
+const PATIENT_DEMO =
+  DEMO_ROLES.find((r) => r.role === "PATIENT") ?? DEMO_ROLES[DEMO_ROLES.length - 1];
+
+export function LoginClient({ patientOnly = false }: { patientOnly?: boolean }) {
   const router = useRouter();
-  const [email, setEmail] = React.useState("admin@diagnoaid.com");
+  const [email, setEmail] = React.useState(
+    patientOnly ? PATIENT_DEMO.email : "admin@diagnoaid.com",
+  );
   const [password, setPassword] = React.useState("demo123456");
   const [showPassword, setShowPassword] = React.useState(false);
-  const [selectedRole, setSelectedRole] = React.useState<DemoRole>(DEMO_ROLES[0]);
+  const [selectedRole, setSelectedRole] = React.useState<DemoRole>(
+    patientOnly ? PATIENT_DEMO : DEMO_ROLES[0],
+  );
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
@@ -125,6 +132,12 @@ export function LoginClient() {
 
       if (!res.ok || !data.success) {
         throw new Error(data.error || "Authentication failed. Please verify credentials.");
+      }
+
+      if (patientOnly && data.user?.role !== "PATIENT") {
+        throw new Error(
+          "This sign-in page is for patient accounts only. Clinic staff should use the staff login page.",
+        );
       }
 
       setSuccess(`Signed in as ${data.user?.name || "User"}. Redirecting...`);
@@ -182,73 +195,87 @@ export function LoginClient() {
             <div className="text-center mb-8">
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-[#DDEDE3] text-[#315C4A] mb-3">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                Clinical Portal Access
+                {patientOnly ? "Patient Portal" : "Clinical Portal Access"}
               </span>
               <h1 className="font-serif text-3xl sm:text-4xl text-[#171717] font-normal tracking-tight">
-                Sign in to your account
+                {patientOnly ? "Sign in to my account" : "Sign in to your account"}
               </h1>
               <p className="text-sm text-[#70706B] mt-2 max-w-md mx-auto">
-                Access diagnostic records, lab order processing, consultations, or patient self-service.
+                {patientOnly
+                  ? "View your test reports, appointments, invoices, and medical profile securely online."
+                  : "Access diagnostic records, lab order processing, consultations, or patient self-service."}
               </p>
             </div>
 
-            {/* Quick Demo Switcher */}
-            <div className="mb-8 p-4 rounded-2xl bg-[#F7F7F3] border border-[#E8E8E3]">
-              <div className="flex items-center justify-between mb-2.5">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#315C4A]">
-                  Select Demo Role (1-Click Fill)
-                </span>
-                <span className="text-[11px] text-[#70706B]">Click to test role</span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {DEMO_ROLES.map((roleItem) => {
-                  const Icon = roleItem.icon;
-                  const isSelected = selectedRole.id === roleItem.id;
-                  return (
-                    <button
-                      key={roleItem.id}
-                      type="button"
-                      onClick={() => handleSelectDemoRole(roleItem)}
-                      className={`text-left p-2.5 rounded-xl border text-xs transition-all flex flex-col gap-1 ${
-                        isSelected
-                          ? "bg-[#FFFFFF] border-[#315C4A] shadow-sm ring-1 ring-[#315C4A]/20"
-                          : "bg-[#FFFFFF]/60 border-[#E8E8E3] hover:border-[#A8D5BA] hover:bg-[#FFFFFF]"
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <div
-                          className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                            isSelected
-                              ? "bg-[#A8D5BA] text-[#171717]"
-                              : "bg-[#DDEDE3] text-[#315C4A]"
-                          }`}
-                        >
-                          <Icon className="w-3 h-3" />
+            {!patientOnly && (
+              <div className="mb-8 p-4 rounded-2xl bg-[#F7F7F3] border border-[#E8E8E3]">
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#315C4A]">
+                    Select Demo Role (1-Click Fill)
+                  </span>
+                  <span className="text-[11px] text-[#70706B]">Click to test role</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {DEMO_ROLES.map((roleItem) => {
+                    const Icon = roleItem.icon;
+                    const isSelected = selectedRole.id === roleItem.id;
+                    return (
+                      <button
+                        key={roleItem.id}
+                        type="button"
+                        onClick={() => handleSelectDemoRole(roleItem)}
+                        className={`text-left p-2.5 rounded-xl border text-xs transition-all flex flex-col gap-1 ${
+                          isSelected
+                            ? "bg-[#FFFFFF] border-[#315C4A] shadow-sm ring-1 ring-[#315C4A]/20"
+                            : "bg-[#FFFFFF]/60 border-[#E8E8E3] hover:border-[#A8D5BA] hover:bg-[#FFFFFF]"
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <div
+                            className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                              isSelected
+                                ? "bg-[#A8D5BA] text-[#171717]"
+                                : "bg-[#DDEDE3] text-[#315C4A]"
+                            }`}
+                          >
+                            <Icon className="w-3 h-3" />
+                          </div>
+                          <span
+                            className={`font-semibold truncate ${
+                              isSelected ? "text-[#171717]" : "text-[#70706B]"
+                            }`}
+                          >
+                            {roleItem.label}
+                          </span>
                         </div>
-                        <span
-                          className={`font-semibold truncate ${
-                            isSelected ? "text-[#171717]" : "text-[#70706B]"
-                          }`}
-                        >
-                          {roleItem.label}
+                        <span className="text-[10px] text-[#70706B] truncate font-mono">
+                          {roleItem.email}
                         </span>
-                      </div>
-                      <span className="text-[10px] text-[#70706B] truncate font-mono">
-                        {roleItem.email}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                      </button>
+                    );
+                  })}
+                </div>
 
-              {/* Active Role Description */}
-              <div className="mt-3 pt-2.5 border-t border-[#E8E8E3] flex items-center justify-between text-xs">
-                <div className="text-[#70706B] text-[11px] flex items-center gap-1.5">
-                  <span className="font-medium text-[#171717]">{selectedRole.name}:</span>
-                  <span>{selectedRole.description}</span>
+                <div className="mt-3 pt-2.5 border-t border-[#E8E8E3] flex items-center justify-between text-xs">
+                  <div className="text-[#70706B] text-[11px] flex items-center gap-1.5">
+                    <span className="font-medium text-[#171717]">{selectedRole.name}:</span>
+                    <span>{selectedRole.description}</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {patientOnly && (
+              <div className="mb-6 p-3.5 rounded-2xl bg-[#F7F7F3] border border-[#E8E8E3] flex items-start gap-3 text-xs text-[#70706B]">
+                <div className="w-9 h-9 rounded-full bg-[#A8D5BA] text-[#171717] flex items-center justify-center shrink-0">
+                  <User className="w-4 h-4" />
+                </div>
+                <p>
+                  Use the email and password from your patient registration. Demo:{" "}
+                  <span className="font-mono text-[#315C4A]">{PATIENT_DEMO.email}</span>
+                </p>
+              </div>
+            )}
 
             {/* Error Notification */}
             {error && (
@@ -334,7 +361,9 @@ export function LoginClient() {
                     </>
                   ) : (
                     <>
-                      <span>Sign In as {selectedRole.label}</span>
+                      <span>
+                        {patientOnly ? "Sign in to patient portal" : `Sign In as ${selectedRole.label}`}
+                      </span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -353,18 +382,26 @@ export function LoginClient() {
                   Create Patient Account →
                 </Link>
               </p>
-              <div className="flex items-center justify-center gap-4 text-[11px] text-[#70706B]">
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-[#70706B]">
                 <Link href="/verify/REP-2026-001" className="hover:text-[#171717] hover:underline">
                   Online Report Verification
                 </Link>
-                <span>•</span>
+                <span className="hidden sm:inline">•</span>
                 <Link href="/book-appointment" className="hover:text-[#171717] hover:underline">
                   Book Home Collection
                 </Link>
-                <span>•</span>
+                <span className="hidden sm:inline">•</span>
                 <Link href="/contact" className="hover:text-[#171717] hover:underline">
                   Help Desk
                 </Link>
+                {patientOnly && (
+                  <>
+                    <span className="hidden sm:inline">•</span>
+                    <Link href="/login" className="hover:text-[#171717] hover:underline">
+                      Clinic staff sign in
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

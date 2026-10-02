@@ -1,16 +1,10 @@
 import * as React from "react";
-import { redirect } from "next/navigation";
 import { dataStore } from "@/lib/services/dataStore";
-import { getServerSession } from "@/lib/auth/session";
+import { requirePatientIdFromSession } from "@/lib/auth/patient-context";
 import { PatientPaymentsClient } from "./payments-client";
 
 export default async function PatientPaymentsPage() {
-  const session = await getServerSession();
-  if (!session) {
-    redirect("/login?from=/patient/payments");
-  }
-
-  const patientId = session.patientId || "PAT-2026-000001";
+  const { session, patientId } = await requirePatientIdFromSession();
   const patientName = session.name || "Patient";
 
   const invoices = dataStore.invoices.filter((i) => i.patientId === patientId);

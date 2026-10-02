@@ -6,7 +6,17 @@ export interface IPayment extends Document {
   patientId: mongoose.Types.ObjectId;
   branchId: mongoose.Types.ObjectId;
   amount: number;
-  method: "CASH" | "CARD" | "MOBILE_BANKING" | "ONLINE";
+  method:
+    | "CASH"
+    | "BKASH"
+    | "NAGAD"
+    | "ROCKET"
+    | "UPAY"
+    | "CELLFIN"
+    | "BANK_TRANSFER"
+    | "CARD"
+    | "MOBILE_BANKING"
+    | "ONLINE";
   transactionReference?: string;
   isRefund: boolean;
   refundReason?: string;
@@ -34,7 +44,18 @@ const PaymentSchema = new Schema<IPayment>(
     method: {
       type: String,
       required: true,
-      enum: ["CASH", "CARD", "MOBILE_BANKING", "ONLINE"],
+      enum: [
+        "CASH",
+        "BKASH",
+        "NAGAD",
+        "ROCKET",
+        "UPAY",
+        "CELLFIN",
+        "BANK_TRANSFER",
+        "CARD",
+        "MOBILE_BANKING",
+        "ONLINE",
+      ],
       default: "CASH",
     },
     transactionReference: { type: String, trim: true },

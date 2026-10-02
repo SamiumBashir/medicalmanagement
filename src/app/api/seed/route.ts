@@ -1,20 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dataStore } from "@/lib/services/dataStore";
 import { connectToDatabase, getDbConnectionStatus } from "@/lib/db/connection";
 import { Branch, TestCategory, User } from "@/models";
 import { MOCK_BRANCHES, MOCK_CATEGORIES } from "@/lib/services/mockData";
+import { DEMO_PASSWORD } from "@/lib/auth/demo-credentials";
 import { hashPassword } from "@/lib/auth/jwt";
 import { getServerSession } from "@/lib/auth/session";
 import { formatErrorResponse } from "@/lib/services/dbHelper";
 
+async function canSeed(req: NextRequest): Promise<boolean> {
+  const session = await getServerSession();
+  if (session?.role === "SUPER_ADMIN") return true;
+  const expected = process.env.SEED_SECRET?.trim();
+  const got = req.headers.get("x-seed-secret")?.trim();
+  return Boolean(expected && got && expected === got);
+}
+
 export async function POST(req: NextRequest) {
   try {
-    // In production, strictly require SUPER_ADMIN authentication
-    if (process.env.NODE_ENV === "production") {
-      const session = await getServerSession();
-      if (!session || session.role !== "SUPER_ADMIN") {
-        return formatErrorResponse("FORBIDDEN", "Database seeding is restricted to Super Administrators.", 403);
-      }
+    if (!(await canSeed(req))) {
+      return formatErrorResponse(
+        "FORBIDDEN",
+        "Seeding requires Super Admin or x-seed-secret header.",
+        403,
+      );
     }
 
     let mongoConnected = false;
@@ -52,7 +60,7 @@ export async function POST(req: NextRequest) {
         }))
       );
 
-      const passwordHash = await hashPassword("Password123!");
+      const passwordHash = await hashPassword(DEMO_PASSWORD);
       await User.deleteMany({});
       await User.create([
         {
